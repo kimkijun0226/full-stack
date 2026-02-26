@@ -2,11 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Checkbox, Field, FieldError, FieldGroup, FieldLabel, Input, Label, Separator } from "@/components/ui";
+import { useAuth } from "@/hooks";
 import { NavLink } from "react-router-dom";
-import { ArrowLeft, Asterisk, ChevronRight } from "lucide-react";
+import { ArrowLeft, Asterisk, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
-const singUpSchema = z
+const signUpSchema = z
   .object({
     email: z.email({ error: "올바른 형식의 이메일 주소를 입력해주세요." }),
     password: z.string().min(8, { error: "비밀번호는 최소 8자 이상이어야 합니다." }),
@@ -22,25 +24,32 @@ const singUpSchema = z
     }
   });
 
-type SignUpForm = z.infer<typeof singUpSchema>;
+type SignUpForm = z.infer<typeof signUpSchema>;
 
 export default function SignUp() {
+  const { signUp } = useAuth();
   const form = useForm<SignUpForm>({
-    resolver: zodResolver(singUpSchema),
+    resolver: zodResolver(signUpSchema),
     defaultValues: { email: "", password: "", confirmPassword: "" },
   });
 
-  const [serviceAgreed, setServiceAgreed] = useState(false); // 서비스 이용약관 동의
-  const [privacyAgreed, setPrivacyAgreed] = useState(false); // 개인정보 수집 및 이용 동의
-  const [marketingAgreed, setMarketingAgreed] = useState(false); // 마케팅 및 광고 수신 동의
+  const [serviceAgreed, setServiceAgreed] = useState(false);
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [marketingAgreed, setMarketingAgreed] = useState(false);
 
-  const handleCheckService = () => setServiceAgreed(!serviceAgreed);
-  const handleCheckPrivacy = () => setPrivacyAgreed(!privacyAgreed);
-  const handleCheckMarketing = () => setMarketingAgreed(!marketingAgreed);
-
-  function onSubmit(data: SignUpForm) {
-    console.log(data);
-  }
+  const onSubmit = (values: SignUpForm) => {
+    if (!serviceAgreed || !privacyAgreed) {
+      toast.warning("서비스 이용약관 및 개인정보 수집 및 이용 동의를 동의해주세요.");
+      return;
+    }
+    signUp.mutate({
+      email: values.email,
+      password: values.password,
+      service_agreed: serviceAgreed,
+      privacy_agreed: privacyAgreed,
+      marketing_agreed: marketingAgreed,
+    });
+  };
 
   return (
     <main className="w-full h-screen min-h-[720px] flex items-center justify-center p-6 gap-6">
@@ -50,7 +59,6 @@ export default function SignUp() {
           <p className="text-muted-foreground">회원 가입을 위한 정보를 입력해주세요.</p>
         </div>
         <div className="grid gap-3">
-          {/* 로그인 폼 */}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FieldGroup className="gap-4">
               <Controller
@@ -58,9 +66,9 @@ export default function SignUp() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="sign-in-email">이메일</FieldLabel>
+                    <FieldLabel htmlFor="sign-up-email">이메일</FieldLabel>
                     <Input
-                      id="sign-in-email"
+                      id="sign-up-email"
                       placeholder="이메일을 입력해주세요."
                       aria-invalid={fieldState.invalid}
                       {...field}
@@ -74,9 +82,9 @@ export default function SignUp() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="sign-in-password">비밀번호</FieldLabel>
+                    <FieldLabel htmlFor="sign-up-password">비밀번호</FieldLabel>
                     <Input
-                      id="sign-in-password"
+                      id="sign-up-password"
                       type="password"
                       placeholder="비밀번호를 입력해주세요."
                       aria-invalid={fieldState.invalid}
@@ -91,9 +99,9 @@ export default function SignUp() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="sign-in-confirm-password">비밀번호 확인</FieldLabel>
+                    <FieldLabel htmlFor="sign-up-confirm-password">비밀번호 확인</FieldLabel>
                     <Input
-                      id="sign-in-confirm-password"
+                      id="sign-up-confirm-password"
                       type="password"
                       placeholder="비밀번호 확인을 입력해주세요."
                       aria-invalid={fieldState.invalid}
@@ -105,7 +113,6 @@ export default function SignUp() {
               />
             </FieldGroup>
 
-            {/* 회원가입 약관 동의 */}
             <div className="grid gap-2">
               <div className="grid gap-2">
                 <div className="flex gap-2 items-center">
@@ -113,24 +120,30 @@ export default function SignUp() {
                   <Label>필수 동의 항목</Label>
                 </div>
                 <div className="flex flex-col">
-                  {/* 서비스 이용약관 동의 */}
                   <div className="w-full flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Checkbox className="w-[18px] h-[18px]" checked={serviceAgreed} onChange={handleCheckService} />
+                      <Checkbox
+                        className="w-[18px] h-[18px]"
+                        checked={serviceAgreed}
+                        onCheckedChange={(checked) => setServiceAgreed(checked === true)}
+                      />
                       서비스 이용 약관 동의
                     </div>
-                    <Button variant={"link"} className="!p-0 gap-1">
+                    <Button type="button" variant="link" className="!p-0 gap-1">
                       <p className="text-xs">자세히 보기</p>
                       <ChevronRight className="mt-[2px]" />
                     </Button>
                   </div>
-                  {/* 개인정보 수집 및 이용 동의 */}
                   <div className="w-full flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Checkbox className="w-[18px] h-[18px]" checked={privacyAgreed} onChange={handleCheckPrivacy} />
+                      <Checkbox
+                        className="w-[18px] h-[18px]"
+                        checked={privacyAgreed}
+                        onCheckedChange={(checked) => setPrivacyAgreed(checked === true)}
+                      />
                       개인정보 수집 및 이용 동의
                     </div>
-                    <Button variant={"link"} className="!p-0 gap-1">
+                    <Button type="button" variant="link" className="!p-0 gap-1">
                       <p className="text-xs">자세히 보기</p>
                       <ChevronRight className="mt-[2px]" />
                     </Button>
@@ -140,13 +153,16 @@ export default function SignUp() {
               <Separator />
               <div className="grid gap-2">
                 <Label>선택 동의 항목</Label>
-                {/* 서비스 이용약관 동의 */}
                 <div className="w-full flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Checkbox className="w-[18px] h-[18px]" checked={marketingAgreed} onChange={handleCheckMarketing} />
+                    <Checkbox
+                      className="w-[18px] h-[18px]"
+                      checked={marketingAgreed}
+                      onCheckedChange={(checked) => setMarketingAgreed(checked === true)}
+                    />
                     마케팅 및 광고 수신 동의
                   </div>
-                  <Button variant={"link"} className="!p-0 gap-1">
+                  <Button type="button" variant="link" className="!p-0 gap-1">
                     <p className="text-xs">자세히 보기</p>
                     <ChevronRight className="mt-[2px]" />
                   </Button>
@@ -156,10 +172,16 @@ export default function SignUp() {
 
             <div className="w-full flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size={"icon"}>
+                <Button type="button" variant="outline" size="icon">
                   <ArrowLeft />
                 </Button>
-                <Button type="submit" variant="outline" className="flex-1 !bg-sky-800/50">
+                <Button
+                  disabled={!form.formState.isValid || signUp.isPending}
+                  type="submit"
+                  variant="outline"
+                  className="flex-1 !bg-sky-800/50"
+                >
+                  {signUp.isPending && <Loader2 className="size-4 animate-spin" />}
                   회원가입
                 </Button>
               </div>
