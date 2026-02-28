@@ -20,8 +20,7 @@ interface AppDraftsDialogProps {
 }
 
 export function AppDraftsDialog({ children }: AppDraftsDialogProps) {
-  const { topic } = useTopic();
-  const { draftTopics } = topic;
+  const { draftTopics } = useTopic();
   const navigate = useNavigate();
 
   const handleDraftClick = (id: number) => {

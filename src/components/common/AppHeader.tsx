@@ -1,11 +1,31 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import { Separator } from "../ui";
 import { useAuthStore } from "@/stores";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+const VIEW_MY = "my";
+const VIEW_COMMUNITY = "community";
 
 function AppHeader() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const view = searchParams.get("view") ?? VIEW_MY;
 
   const { user, reset } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      console.log(123);
+      await reset();
+      navigate("/sign-in");
+      toast.success("로그아웃 성공");
+    } catch (error) {
+      console.error(error);
+      toast.error("로그아웃 실패");
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-10 w-full flex items-center justify-center bg-[#121212]">
       <div className="w-full max-w-[1328px] h-full flex items-center justify-between px-6 py-3">
@@ -17,19 +37,34 @@ function AppHeader() {
             className="w-6 h-6 cursor-pointer"
             onClick={() => navigate("/")}
           />
-          <div className="flex items-center gap-5">
-            <div className="font-semibold">토픽 인사이트</div>
-            <Separator orientation="vertical" className="!h-4" />
-            <div className="font-semibold">포트폴리오</div>
+          <div className="flex items-center gap-2 rounded-lg bg-white/5 p-1">
+            <Link
+              to={{ pathname: "/", search: view === VIEW_MY ? "" : "?view=my" }}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                view === VIEW_MY ? "bg-white/15 text-white" : "text-white/70 hover:text-white",
+              )}
+            >
+              나의 글
+            </Link>
+            <Link
+              to={{ pathname: "/", search: "?view=community" }}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                view === VIEW_COMMUNITY ? "bg-white/15 text-white" : "text-white/70 hover:text-white",
+              )}
+            >
+              커뮤니티
+            </Link>
           </div>
         </div>
 
         {/* 로그인 UI */}
-        {user.email !== "" ? (
+        {user?.id ? (
           <div className="flex items-center gap-5">
             <span className="text-sm text-white">{user.email}</span>
             <Separator orientation="vertical" className="!h-4" />
-            <span className="text-sm text-white cursor-pointer" onClick={reset}>
+            <span className="text-sm text-white cursor-pointer" onClick={handleLogout}>
               로그아웃
             </span>
           </div>
