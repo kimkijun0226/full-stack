@@ -30,3 +30,15 @@ export {
   DialogClose,
 } from "./dialog";
 export { Badge } from "./badge";
+export { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./card";
+export {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "./alert-dialog";
