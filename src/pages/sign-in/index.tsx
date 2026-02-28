@@ -3,7 +3,9 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Field, FieldError, FieldGroup, FieldLabel, Input } from "@/components/ui";
 import { useAuth } from "@/hooks";
-import { NavLink } from "react-router-dom";
+import { useAuthStore } from "@/stores";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const signInSchema = z.object({
   email: z.email({ error: "올바른 형식의 이메일 주소를 입력해주세요." }),
@@ -13,14 +15,27 @@ const signInSchema = z.object({
 type SignInForm = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
-  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const { signIn, googleSignIn } = useAuth();
   const form = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
     defaultValues: { email: "", password: "" },
   });
 
+  // 이미 로그인된 경우 홈으로
+  useEffect(() => {
+    if (user?.id) navigate("/", { replace: true });
+  }, [user?.id, navigate]);
+
+  // 일반 로그인
   const onSubmit = (values: SignInForm) => {
     signIn.mutate(values);
+  };
+
+  // 구글 로그인
+  const handleGoogleSignIn = () => {
+    googleSignIn.mutate();
   };
 
   return (
@@ -31,7 +46,7 @@ export default function SignIn() {
           <p className="text-muted-foreground">로그인을 위한 정보를 입력해주세요.</p>
         </div>
         <div className="grid gap-3">
-          <Button type="button" variant="secondary">
+          <Button type="button" variant="secondary" onClick={handleGoogleSignIn}>
             <img src="/assets/icons/social/google.svg" alt="@GOOGLE-LOGO" className="w-[18px] h-[18px] mr-1" />
             구글 로그인
           </Button>

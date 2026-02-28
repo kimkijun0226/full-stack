@@ -5,9 +5,9 @@ import { SelectGroup, SelectLabel } from "@/components/ui/select";
 import { TOPIC_CATEGORY } from "@/constants/category.constant";
 import { useTopic, useTopicDetail } from "@/hooks";
 import { useAuthStore } from "@/stores";
-import { TOPIC_STATUS } from "@/types";
+import { TOPIC_STATUS, type TOPIC_VISIBILITY } from "@/types";
 import type { Block } from "@blocknote/core";
-import { ArrowLeft, Asterisk, BookOpenCheck, ImageOff, Save } from "lucide-react";
+import { ArrowLeft, Asterisk, BookOpenCheck, ImageOff, Lock, Globe, Save } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -18,14 +18,13 @@ export default function CreateTopic() {
   const { user } = useAuthStore();
 
   const { data: topic, isLoading: topicLoading } = useTopicDetail(id);
-  const {
-    topic: { updateTopic },
-  } = useTopic();
+  const { updateTopic } = useTopic();
 
   const [title, setTitle] = useState(topic?.title ?? "");
   const [content, setContent] = useState<Block[]>(topic?.content ? JSON.parse(topic.content) : []);
   const [category, setCategory] = useState<string>(topic?.category ?? "");
   const [thumbnail, setThumbnail] = useState<File | string | null>(topic?.thumbnail ?? null);
+  const [visibility, setVisibility] = useState<TOPIC_VISIBILITY>(topic?.visibility ?? "PRIVATE");
 
   const resolveThumbnailUrl = async (): Promise<string | null> => {
     if (!thumbnail) return null;
@@ -50,10 +49,11 @@ export default function CreateTopic() {
           thumbnail: thumbnailUrl,
           author: user.id,
           status: TOPIC_STATUS.TEMP,
+          visibility,
         },
       },
       {
-        onSuccess: () => toast.success("토픽을 임시 저장 하였습니다."),
+        onSuccess: () => toast.success("글을 임시 저장했습니다."),
       },
     );
   };
@@ -61,7 +61,7 @@ export default function CreateTopic() {
   const handlePublish = async () => {
     if (!id || !user) return;
     if (!title || !content.length || !category || !thumbnail) {
-      toast.warning("제목, 본문, 카테고리, 썸네일은 필수값 입니다.");
+      toast.warning("제목, 본문, 카테고리, 썸네일은 필수입니다.");
       return;
     }
     const thumbnailUrl = await resolveThumbnailUrl();
@@ -79,12 +79,13 @@ export default function CreateTopic() {
           thumbnail: thumbnailUrl,
           author: user.id,
           status: TOPIC_STATUS.PUBLISH,
+          visibility,
         },
       },
       {
         onSuccess: () => {
-          toast.success("토픽을 발행 하였습니다.");
-          navigate(`/topics/${id}`);
+          toast.success(visibility === "PUBLIC" ? "글을 전체 공개로 발행했습니다." : "글을 발행했습니다.");
+          navigate(`/topics/${id}/detail`);
         },
       },
     );
@@ -113,7 +114,7 @@ export default function CreateTopic() {
       <section className="w-3/4 h-full flex flex-col gap-6">
         <div className="flex flex-col pb-6 border-b">
           <span className="text-[#F96859] font-semibold">Step 01</span>
-          <span className="font-semibold text-base">토픽 작성하기</span>
+          <span className="font-semibold text-base">글 작성하기</span>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -124,7 +125,7 @@ export default function CreateTopic() {
           <Input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="토픽 제목을 입력해주세요."
+            placeholder="제목을 입력해주세요."
             className="h-16 pl-6 !text-lg placeholder:text-lg placeholder:font-semibold border-0"
           />
         </div>
@@ -147,11 +148,41 @@ export default function CreateTopic() {
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1">
             <Asterisk size={14} className="text-[#F96859]" />
+            <Label className="text-muted-foreground">공개 범위</Label>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={visibility === "PRIVATE" ? "default" : "outline"}
+              size="sm"
+              className="flex-1 gap-1"
+              onClick={() => setVisibility("PRIVATE")}
+            >
+              <Lock className="size-4" />
+              나만 보기
+            </Button>
+            <Button
+              type="button"
+              variant={visibility === "PUBLIC" ? "default" : "outline"}
+              size="sm"
+              className="flex-1 gap-1"
+              onClick={() => setVisibility("PUBLIC")}
+            >
+              <Globe className="size-4" />
+              전체 공개
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">전체 공개 시 커뮤니티에서 다른 사람도 볼 수 있어요.</p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-1">
+            <Asterisk size={14} className="text-[#F96859]" />
             <Label className="text-muted-foreground">카테고리</Label>
           </div>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="토픽(주제) 선택" />
+              <SelectValue placeholder="카테고리 선택" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>

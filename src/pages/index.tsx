@@ -1,22 +1,36 @@
-import { CircleSmall, NotebookPen, PencilLine } from "lucide-react";
+import { NotebookPen, PencilLine } from "lucide-react";
 import { AppDraftsDialog, AppSidebar } from "../components/common";
-import { SkeletonHotTopic, SkeletonNewTopic } from "../components/skeleton";
+import { SkeletonHotTopic } from "../components/skeleton";
 import { Button } from "../components/ui";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
-import { useTopic } from "@/hooks";
+import { useTopic, useMyTopics, useCommunityTopics } from "@/hooks";
+import { NewTopicCard } from "@/components/topics";
+import type { Topic } from "@/types";
+
+const VIEW_MY = "my";
 
 function App() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const category = searchParams.get("category") ?? "";
+  const view = searchParams.get("view") ?? VIEW_MY;
   const { user } = useAuthStore();
-  const { topic } = useTopic();
+  const { createTopic, draftTopics } = useTopic();
+  const { data: myTopics = [], isLoading: myLoading } = useMyTopics(category || undefined);
+  const { data: communityTopics = [], isLoading: communityLoading } = useCommunityTopics(category || undefined);
+  const draftCount = draftTopics.length;
+
+  const isMyView = view === VIEW_MY;
+  const list = isMyView ? myTopics : communityTopics;
+  const listLoading = isMyView ? myLoading : communityLoading;
 
   const handleRoute = async () => {
-    if (!user.id || !user.email || !user.role) {
+    if (!user || !user.id || !user.email || !user.role) {
       toast(
         <>
-          토픽 작성은 로그인 후 이용 가능합니다.
+          글 작성은 로그인 후 이용 가능합니다.
           <br />
           로그인 페이지로 이동 하시겠습니까?
         </>,
@@ -40,93 +54,91 @@ function App() {
     }
 
     try {
-      const created = await topic.createTopic.mutateAsync({
+      const created = await createTopic.mutateAsync({
         author: user.id,
         status: null,
         title: null,
         content: null,
         category: null,
         thumbnail: null,
+        visibility: "PRIVATE",
       });
-      toast.success("토픽을 생성 하였습니다.");
+      toast.success("글을 생성하였습니다.");
       navigate(`/topics/${created.id}/create`);
     } catch (error) {
       console.log(error);
-      toast.error("토픽 생성에 실패했습니다.");
+      toast.error("글 생성에 실패했습니다.");
     }
   };
 
   return (
     <main className="w-full h-full min-h-screen flex p-6 gap-6">
-      <div className="fixed right-1/2 bottom-10 translate-x-1/2 z-20 items-center flex gap-2">
-        <Button variant={"destructive"} className="!py-5 !px-6 rounded-full" onClick={handleRoute}>
-          <PencilLine />
-          나만의 토픽 작성
+      <div className="fixed right-1/2 bottom-10 translate-x-1/2 z-20 flex items-center gap-2 p-1.5 rounded-full border border-sky-200/60 bg-white/65 dark:border-sky-500/15 dark:bg-slate-950/40 shadow-2xl shadow-black/10 ring-1 ring-sky-300/15 dark:ring-sky-500/10 backdrop-blur-xl supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-slate-950/45">
+        <Button
+          variant="ghost"
+          className="relative overflow-hidden py-5 px-6 rounded-full border border-sky-300/45 bg-linear-to-b from-sky-400/85 to-blue-600/70 text-white shadow-lg shadow-sky-500/20 hover:border-sky-200/70 hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_-6px_rgba(56,189,248,0.45)] active:translate-y-0 active:shadow-none transition-all duration-300 ease-out before:absolute before:inset-0 before:bg-linear-to-r before:from-white/0 before:via-white/25 before:to-white/0 before:translate-x-[-130%] hover:before:translate-x-[130%] before:transition-transform before:duration-700 before:ease-out"
+          onClick={handleRoute}
+        >
+          <PencilLine />글 쓰기
         </Button>
-        {user.id && (
+        {user?.id ? (
           <AppDraftsDialog>
             <div className="relative">
-              <Button variant={"outline"} className="rounded-full w-10 h-10">
+              <Button
+                variant="ghost"
+                className="relative overflow-hidden rounded-full w-10 h-10 border border-sky-200/60 bg-white/55 dark:border-sky-500/15 dark:bg-white/10 text-foreground shadow-sm shadow-black/5 hover:bg-white/75 hover:border-sky-200/80 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_-8px_rgba(59,130,246,0.4)] active:translate-y-0 active:shadow-none transition-all duration-300 ease-out before:absolute before:inset-0 before:bg-linear-to-r before:from-white/0 before:via-white/20 before:to-white/0 before:translate-x-[-130%] hover:before:translate-x-[130%] before:transition-transform before:duration-700 before:ease-out"
+              >
                 <NotebookPen />
               </Button>
-              <CircleSmall size={14} className="absolute top-0 right-0 text-red-500" fill="#EF4444" />
+              {draftCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-linear-to-b from-rose-500 to-red-600 text-[10px] font-semibold text-white shadow-md shadow-red-500/25 ring-2 ring-background">
+                  {draftCount > 99 ? "99+" : draftCount}
+                </span>
+              )}
             </div>
           </AppDraftsDialog>
-        )}
+        ) : null}
       </div>
       {/* 카테고리 사이드바 */}
-      <AppSidebar />
-      {/* 토픽 콘텐츠 */}
-      <section className="flex-1 flex flex-col gap-12">
-        {/* 핫토픽 */}
+      <div className="hidden lg:block lg:min-w-60 lg:w-60 lg:h-full">
+        <AppSidebar />
+      </div>
+      {/* 글 목록 */}
+      <section className="w-full lg:w-[calc(100%-264px)] flex flex-col gap-12">
         <div className="w-full flex flex-col gap-6">
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <img src="/assets/gifs/gif-001.gif" alt="@IMG" className="w-7 h-7" />
-              <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">HOT 토픽</h4>
-            </div>
+            <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">{isMyView ? "나의 글" : "커뮤니티"}</h4>
             <p className="md:text-base text-muted-foreground">
-              지금 가장 주목받는 주제들을 살펴보고, 다양한 관점의 인사이트를 얻어보세요.
+              {isMyView
+                ? "내가 발행한 글, 독후감, 여행일지 등을 모아봤어요."
+                : "다른 분들이 전체 공개한 글을 구경해 보세요."}
             </p>
           </div>
 
-          <div className="grid grid-cols-4 gap-6">
-            {topic.publishedLoading ? (
-              <>
-                <SkeletonHotTopic />
-                <SkeletonHotTopic />
-                <SkeletonHotTopic />
-                <SkeletonHotTopic />
-              </>
-            ) : (
-              topic.publishedTopics.slice(0, 4).map((t) => <SkeletonHotTopic key={t.id} />)
-            )}
-          </div>
-        </div>
-        {/* 뉴 토픽 */}
-        <div className="w-full flex flex-col gap-6">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <img src="/assets/gifs/gif-002.gif" alt="@IMG" className="w-7 h-7" />
-              <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">NEW 토픽</h4>
+          {listLoading ? (
+            <div className="min-h-120 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <SkeletonHotTopic />
+              <SkeletonHotTopic />
             </div>
-            <p className="md:text-base text-muted-foreground">
-              새로운 시선으로, 새로운 이야기를 시작하세요. 지금 바로 당신만의 토픽을 시작해 보세요.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            {topic.publishedLoading ? (
-              <>
-                <SkeletonNewTopic />
-                <SkeletonNewTopic />
-                <SkeletonNewTopic />
-                <SkeletonNewTopic />
-              </>
-            ) : (
-              topic.publishedTopics.slice(0, 4).map((t) => <SkeletonNewTopic key={t.id} />)
-            )}
-          </div>
+          ) : list.length > 0 ? (
+            <div className="min-h-120 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {list.map((t: Topic) => (
+                <NewTopicCard key={t.id} props={t} />
+              ))}
+            </div>
+          ) : (
+            <div className="w-full min-h-120 flex items-center justify-center">
+              <p className="text-muted-foreground/50">
+                {isMyView
+                  ? category
+                    ? "해당 카테고리의 내 글이 없습니다."
+                    : "아직 발행한 글이 없어요. 글을 써 보세요."
+                  : category
+                    ? "해당 카테고리의 커뮤니티 글이 없습니다."
+                    : "전체 공개된 글이 없습니다."}
+              </p>
+            </div>
+          )}
         </div>
       </section>
     </main>
