@@ -1,6 +1,6 @@
 import supabase from "@/lib/supabase";
 import { nanoid } from "nanoid";
-import { TOPIC_STATUS, type Topic } from "@/types";
+import { TOPIC_STATUS, type Topic, type TOPIC_VISIBILITY } from "@/types";
 
 const FILES_BUCKET = "files";
 const TOPICS_PATH_PREFIX = "topics";
@@ -12,6 +12,7 @@ export type TopicCreatePayload = {
   content?: string | null;
   category?: string | null;
   thumbnail?: string | null;
+  visibility?: TOPIC_VISIBILITY | null;
 };
 
 export type TopicUpdatePayload = Partial<{
@@ -21,12 +22,67 @@ export type TopicUpdatePayload = Partial<{
   thumbnail: string | null;
   author: string;
   status: TOPIC_STATUS;
+  visibility: TOPIC_VISIBILITY;
 }>;
 
-async function getPublishedTopics(): Promise<Topic[]> {
-  const { data, error } = await supabase.from("topic").select("*").eq("status", TOPIC_STATUS.PUBLISH);
+/** 내가 발행한 글 (나만보기 + 전체공개 모두) */
+async function getMyPublishedTopics(authorId: string, category?: string): Promise<Topic[]> {
+  let query = supabase
+    .from("topic")
+    .select("*")
+    .eq("author", authorId)
+    .eq("status", TOPIC_STATUS.PUBLISH)
+    .order("created_at", { ascending: false });
+
+  if (category && category.trim() !== "") {
+    query = query.eq("category", category);
+  }
+
+  const { data, error } = await query;
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizeTopic);
+}
+
+/** 커뮤니티: 전체 공개된 글만 (다른 사람 글 포함). visibility 컬럼 없으면 발행된 전체 반환 */
+async function getCommunityTopics(category?: string): Promise<Topic[]> {
+  let query = supabase
+    .from("topic")
+    .select("*")
+    .eq("status", TOPIC_STATUS.PUBLISH)
+    .order("created_at", { ascending: false });
+
+  if (category && category.trim() !== "") {
+    query = query.eq("category", category);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  const rows = (data ?? []).map(normalizeTopic);
+  return rows.filter((t) => t.visibility === "PUBLIC");
+}
+
+function normalizeTopic(row: Record<string, unknown>): Topic {
+  return {
+    ...row,
+    visibility: (row.visibility as Topic["visibility"]) ?? "PUBLIC",
+  } as Topic;
+}
+
+/** @deprecated 나의 글/커뮤니티 분리 후 사용처 없음. getMyPublishedTopics / getCommunityTopics 사용 */
+async function getPublishedTopics(category?: string): Promise<Topic[]> {
+  let query = supabase
+    .from("topic")
+    .select("*")
+    .eq("status", TOPIC_STATUS.PUBLISH)
+    .order("created_at", { ascending: false });
+
+  if (category && category.trim() !== "") {
+    query = query.eq("category", category);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []).map(normalizeTopic);
 }
 
 async function getDraftTopics(authorId: string): Promise<Topic[]> {
@@ -36,13 +92,13 @@ async function getDraftTopics(authorId: string): Promise<Topic[]> {
     .eq("author", authorId)
     .eq("status", TOPIC_STATUS.TEMP);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map(normalizeTopic);
 }
 
-async function getById(id: string | number): Promise<Topic | null> {
+async function getTopicId(id: string | number): Promise<Topic | null> {
   const { data, error } = await supabase.from("topic").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
-  return data;
+  return data ? normalizeTopic(data) : null;
 }
 
 async function uploadThumbnail(file: File): Promise<string> {
@@ -59,20 +115,28 @@ async function uploadThumbnail(file: File): Promise<string> {
 async function create(payload: TopicCreatePayload): Promise<Topic> {
   const { data, error } = await supabase.from("topic").insert([payload]).select().single();
   if (error) throw error;
-  return data;
+  return normalizeTopic(data);
 }
 
 async function update(id: string | number, payload: TopicUpdatePayload): Promise<Topic> {
   const { data, error } = await supabase.from("topic").update(payload).eq("id", id).select().single();
   if (error) throw error;
-  return data;
+  return normalizeTopic(data);
+}
+
+async function deleteTopic(id: number): Promise<void> {
+  const { error } = await supabase.from("topic").delete().eq("id", id).select().single();
+  if (error) throw error;
 }
 
 export const topicApi = {
   getPublishedTopics,
+  getMyPublishedTopics,
+  getCommunityTopics,
   getDraftTopics,
-  getById,
+  getTopicId,
   uploadThumbnail,
   create,
   update,
+  deleteTopic,
 };
