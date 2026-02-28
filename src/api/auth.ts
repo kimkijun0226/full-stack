@@ -55,7 +55,32 @@ async function signUp(payload: SignUpPayload): Promise<void> {
   if (insertError) throw insertError;
 }
 
+async function signInWithGoogle(): Promise<void> {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      queryParams: { access_type: "offline", prompt: "consent" },
+      redirectTo: `${import.meta.env.VITE_APP_URL}`,
+    },
+  });
+  if (error) throw error;
+}
+
+async function supabaseGetSession(): Promise<AuthUser | null> {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  const session = data.session;
+  if (!session?.user) return null;
+  return {
+    id: session.user.id,
+    email: session.user.email ?? "",
+    role: (session.user as { role?: string }).role ?? "",
+  };
+}
+
 export const authApi = {
   signInWithPassword,
   signUp,
+  signInWithGoogle,
+  supabaseGetSession,
 };

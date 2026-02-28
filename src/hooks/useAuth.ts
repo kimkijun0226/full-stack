@@ -27,5 +27,31 @@ export function useAuth() {
     },
   });
 
-  return { signIn, signUp };
+  const googleSignIn = useMutation({
+    mutationFn: () => authApi.signInWithGoogle(),
+    meta: { scope: "auth" as const },
+    onSuccess: () => {
+      toast.success("구글 로그인 성공");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const supabaseGetSession = useMutation({
+    mutationFn: () => authApi.supabaseGetSession(),
+    meta: { scope: "auth" as const },
+    onSuccess: (user) => {
+      if (user) {
+        setUser(user);
+        toast.success("세션 가져오기 성공");
+        navigate("/");
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  return { signIn, signUp, googleSignIn, supabaseGetSession };
 }

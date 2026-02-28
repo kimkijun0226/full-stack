@@ -9,6 +9,7 @@ import App from "./pages"; // 앱 컴포넌트
 import SignIn from "./pages/sign-in"; // 로그인 페이지
 import SignUp from "./pages/sign-up"; // 회원가입 페이지
 import CreateTopic from "./pages/topics/[topic_id]/create.tsx"; // 토픽 작성 페이지
+import { TopicDetail } from "./pages/topics/[topic_id]/detail.tsx";
 import { queryClient } from "./lib/queryClient";
 import "./index.css";
 import { Toaster } from "./components/ui";
@@ -18,14 +19,15 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <BrowserRouter>
-        <Routes>
-          <Route element={<RootLayout />}>
-            <Route index element={<App />} />
-            <Route path="sign-in" element={<SignIn />} />
-            <Route path="sign-up" element={<SignUp />} />
-            <Route path="topics/:id/create" element={<CreateTopic />} />
-          </Route>
-        </Routes>
+          <Routes>
+            <Route element={<RootLayout />}>
+              <Route index element={<App />} />
+              <Route path="sign-in" element={<SignIn />} />
+              <Route path="sign-up" element={<SignUp />} />
+              <Route path="topics/:id/create" element={<CreateTopic />} />
+              <Route path="topics/:id/detail" element={<TopicDetail />} />
+            </Route>
+          </Routes>
         </BrowserRouter>
         <Toaster position="top-center" richColors />
       </ThemeProvider>
