@@ -4,13 +4,17 @@ import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const VIEW_MY = "my";
 const VIEW_COMMUNITY = "community";
 
 function AppHeader() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const view = searchParams.get("view") ?? VIEW_MY;
+  const category = searchParams.get("category") ?? "";
+  const view = searchParams.get("view");
+  const isCommunityView = view === VIEW_COMMUNITY;
+
+  const mySearch = category ? `?category=${category}` : "";
+  const communitySearch = category ? `?view=community&category=${category}` : "?view=community";
 
   const { user, reset } = useAuthStore();
 
@@ -38,19 +42,19 @@ function AppHeader() {
           />
           <div className="flex items-center gap-2 rounded-lg bg-white/5 p-1">
             <Link
-              to={{ pathname: "/", search: view === VIEW_MY ? "" : "?view=my" }}
+              to={{ pathname: "/", search: mySearch }}
               className={cn(
                 "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                view === VIEW_MY ? "bg-white/15 text-white" : "text-white/70 hover:text-white",
+                !isCommunityView ? "bg-white/15 text-white" : "text-white/70 hover:text-white",
               )}
             >
               나의 글
             </Link>
             <Link
-              to={{ pathname: "/", search: "?view=community" }}
+              to={{ pathname: "/", search: communitySearch }}
               className={cn(
                 "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                view === VIEW_COMMUNITY ? "bg-white/15 text-white" : "text-white/70 hover:text-white",
+                isCommunityView ? "bg-white/15 text-white" : "text-white/70 hover:text-white",
               )}
             >
               커뮤니티

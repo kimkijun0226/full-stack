@@ -5,7 +5,17 @@ import { Button } from "../ui";
 
 function AppSidebar() {
   const [searchParams] = useSearchParams();
+  const view = searchParams.get("view");
   const currentCategory = searchParams.get("category") ?? "";
+  const isCommunityView = view === "community";
+
+  const makeSearch = (category: string) => {
+    const params = new URLSearchParams();
+    if (isCommunityView) params.set("view", "community");
+    if (category) params.set("category", category);
+    const query = params.toString();
+    return query ? `?${query}` : "";
+  };
 
   return (
     <aside className="min-w-60 w-60 flex flex-col gap-6">
@@ -16,7 +26,7 @@ function AppSidebar() {
       <div className="w-full flex flex-col gap-2">
         {CLASS_CATEGORY.map((menu) => {
           const isActive = currentCategory === menu.category;
-          const to = menu.category ? { pathname: "/", search: `category=${menu.category}` } : { pathname: "/" };
+          const to = { pathname: "/", search: makeSearch(menu.category) };
 
           return (
             <Button
