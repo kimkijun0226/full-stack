@@ -22,9 +22,9 @@ export const useAuthStore = create<AuthStore>()(
 
       // 로그아웃 (상태 + Supabase 세션 모두 제거)
       reset: async () => {
-        console.log(456);
+        console.log(123)
         await supabase.auth.signOut();
-        console.log(789);
+        console.log(456)
         set({ user: null }); // Zustand 상태 초기화
         localStorage.removeItem("auth-storage"); // localStorage 제거
       },

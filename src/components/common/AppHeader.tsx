@@ -16,10 +16,9 @@ function AppHeader() {
 
   const handleLogout = async () => {
     try {
-      console.log(123);
       await reset();
-      navigate("/sign-in");
       toast.success("로그아웃 성공");
+      navigate("/sign-in");
     } catch (error) {
       console.error(error);
       toast.error("로그아웃 실패");
