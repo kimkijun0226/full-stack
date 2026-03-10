@@ -73,11 +73,7 @@ function AppHeader() {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate({ pathname: "/", search: user?.id ? "" : "?view=community" })}
           >
-            <img
-              src="https://images.unsplash.com/photo-1557683316-973673baf926?w=80&h=80&fit=crop"
-              alt="@logo"
-              className="w-6 h-6 "
-            />
+            <img src="/assets/my-page-icon.png" alt="@logo" className="w-8 h-8 " />
             <p className="text-lg">My Page</p>
           </h1>
 
