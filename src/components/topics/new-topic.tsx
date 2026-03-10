@@ -5,7 +5,6 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
 import type { Topic } from "@/types";
-import { useAuthStore } from "@/stores";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -57,7 +56,6 @@ function formatCreatedAt(createdAt: string) {
 
 export function NewTopicCard({ props }: Props) {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
 
   return (
     <Card className="w-full h-fit p-4 gap-4 cursor-pointer" onClick={() => navigate(`/topics/${props.id}/detail`)}>
@@ -79,7 +77,7 @@ export function NewTopicCard({ props }: Props) {
       </div>
       <Separator />
       <div className="w-full flex items-center justify-between">
-        <p>{user?.email}</p>
+        <p>닉네임: 123</p>
         <p>{formatCreatedAt(props.created_at)}</p>
       </div>
     </Card>

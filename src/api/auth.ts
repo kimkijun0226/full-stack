@@ -60,7 +60,7 @@ async function signInWithGoogle(): Promise<void> {
     provider: "google",
     options: {
       queryParams: { access_type: "offline", prompt: "consent" },
-      redirectTo: `${import.meta.env.VITE_APP_URL}`,
+      redirectTo: `${import.meta.env.VITE_APP_URL}/auth/callback`,
     },
   });
   if (error) throw error;

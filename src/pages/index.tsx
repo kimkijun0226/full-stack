@@ -18,6 +18,7 @@ function App() {
   const category = searchParams.get("category") ?? "";
   const viewParam = searchParams.get("view");
   const { user } = useAuthStore();
+
   const view = user?.id ? (viewParam ?? VIEW_MY) : VIEW_COMMUNITY;
   const { createTopic, draftTopics } = useTopic();
   const { data: myTopics = [], isLoading: myLoading } = useMyTopics(category || undefined);

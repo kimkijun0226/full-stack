@@ -23,6 +23,28 @@ function AppHeader() {
     "inline-flex items-center justify-center gap-0.5 rounded-full px-0 py-0.5 text-[11px] font-semibold tracking-wide";
 
   const handleViewChange = (nextView: string) => {
+    if (!user?.id && nextView === VIEW_MY) {
+      toast(
+        <>
+          로그인이 필요한 서비스 입니다.
+          <br />
+          로그인 페이지로 이동 하시겠습니까?
+        </>,
+        {
+          action: {
+            label: "예",
+            onClick: () => navigate("/sign-in"),
+          },
+          cancel: {
+            label: "아니오",
+            onClick: () => {},
+          },
+          invert: true,
+        },
+      );
+      return;
+    }
+
     if (nextView === VIEW_COMMUNITY) {
       navigate({ pathname: "/", search: communitySearch });
       return;
@@ -61,52 +83,42 @@ function AppHeader() {
 
           <Separator orientation="vertical" className="!h-4" />
 
-          {user?.id ? (
-            <div className="rounded-full border border-white/35 bg-white/10 p-0.5">
-              <div className="relative grid w-[152px] grid-cols-2">
-                <span
-                  aria-hidden
-                  className={cn(
-                    "pointer-events-none absolute left-0 top-0 h-6 w-1/2 rounded-full bg-white transition-transform duration-250 ease-out",
-                    activeView === VIEW_COMMUNITY ? "translate-x-full" : "translate-x-0",
-                  )}
-                />
-                <button
-                  type="button"
-                  className={cn(
-                    navLogoBase,
-                    "relative z-10 h-6 w-full transition-colors duration-200 cursor-pointer",
-                    activeView === VIEW_MY ? "text-black" : "text-white/80 hover:text-white",
-                  )}
-                  onClick={() => handleViewChange(VIEW_MY)}
-                >
-                  <BookText className="h-3 w-3" />
-                  나의 글
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    navLogoBase,
-                    "relative z-10 h-6 w-full transition-colors duration-200 cursor-pointer",
-                    activeView === VIEW_COMMUNITY ? "text-black" : "text-white/80 hover:text-white",
-                  )}
-                  onClick={() => handleViewChange(VIEW_COMMUNITY)}
-                >
-                  <Users className="h-3 w-3" />
-                  커뮤니티
-                </button>
-              </div>
+          <div className="rounded-full border border-white/35 bg-white/10 p-0.5">
+            <div className="relative grid w-[152px] grid-cols-2">
+              <span
+                aria-hidden
+                className={cn(
+                  "pointer-events-none absolute left-0 top-0 h-6.5 w-1/2 rounded-full bg-white transition-transform duration-250 ease-out",
+                  activeView === VIEW_COMMUNITY ? "translate-x-full" : "translate-x-0",
+                )}
+              />
+              <button
+                type="button"
+                className={cn(
+                  navLogoBase,
+                  "relative z-10 h-6 w-full transition-colors duration-200",
+                  !user?.id ? "cursor-not-allowed" : "cursor-pointer",
+                  activeView === VIEW_MY ? "text-black" : "text-white/80 hover:text-white",
+                )}
+                onClick={() => handleViewChange(VIEW_MY)}
+              >
+                <BookText className="h-3 w-3" />
+                나의 글
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  navLogoBase,
+                  "relative z-10 h-6.5 w-full transition-colors duration-200 cursor-pointer",
+                  activeView === VIEW_COMMUNITY ? "text-black" : "text-white/80 hover:text-white",
+                )}
+                onClick={() => handleViewChange(VIEW_COMMUNITY)}
+              >
+                <Users className="h-3 w-3" />
+                커뮤니티
+              </button>
             </div>
-          ) : (
-            <button
-              type="button"
-              className={cn(navLogoBase, "h-7 rounded-full border border-white bg-white px-0.5 text-black")}
-              onClick={() => navigate({ pathname: "/", search: communitySearch })}
-            >
-              <Users className="h-2.5 w-2.5" />
-              커뮤니티
-            </button>
-          )}
+          </div>
         </div>
 
         {/* 로그인 UI */}
