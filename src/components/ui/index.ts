@@ -42,3 +42,4 @@ export {
   AlertDialogCancel,
   AlertDialogAction,
 } from "./alert-dialog";
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";

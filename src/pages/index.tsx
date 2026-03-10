@@ -10,13 +10,15 @@ import { NewTopicCard } from "@/components/topics";
 import type { Topic } from "@/types";
 
 const VIEW_MY = "my";
+const VIEW_COMMUNITY = "community";
 
 function App() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category") ?? "";
-  const view = searchParams.get("view") ?? VIEW_MY;
+  const viewParam = searchParams.get("view");
   const { user } = useAuthStore();
+  const view = user?.id ? (viewParam ?? VIEW_MY) : VIEW_COMMUNITY;
   const { createTopic, draftTopics } = useTopic();
   const { data: myTopics = [], isLoading: myLoading } = useMyTopics(category || undefined);
   const { data: communityTopics = [], isLoading: communityLoading } = useCommunityTopics(category || undefined);
