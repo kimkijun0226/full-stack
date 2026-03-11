@@ -3,10 +3,11 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Checkbox, Field, FieldError, FieldGroup, FieldLabel, Input, Label, Separator } from "@/components/ui";
 import { useAuth } from "@/hooks";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { ArrowLeft, Asterisk, ChevronRight, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/stores";
 
 const signUpSchema = z
   .object({
@@ -28,6 +29,8 @@ type SignUpForm = z.infer<typeof signUpSchema>;
 
 export default function SignUp() {
   const { signUp } = useAuth();
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
   const form = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: { email: "", password: "", confirmPassword: "" },
@@ -36,6 +39,11 @@ export default function SignUp() {
   const [serviceAgreed, setServiceAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
+
+  // 이미 로그인된 경우 홈으로
+  useEffect(() => {
+    if (user?.id) navigate("/", { replace: true });
+  }, [user?.id, navigate]);
 
   const onSubmit = (values: SignUpForm) => {
     if (!serviceAgreed || !privacyAgreed) {

@@ -16,7 +16,7 @@ type SignInForm = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuthStore();
   const { signIn, googleSignIn } = useAuth();
   const form = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
