@@ -35,20 +35,32 @@ export function useAuth() {
     },
   });
 
-  const supabaseGetSession = useMutation({
-    mutationFn: () => authApi.supabaseGetSession(),
+  const checkEmailDuplicate = useMutation({
+    mutationFn: (email: string) => authApi.checkEmailDuplicate(email),
     meta: { scope: "auth" as const },
-    onSuccess: (user) => {
-      if (user) {
-        setUser(user);
-        toast.success("세션 가져오기 성공");
-        navigate("/");
-      }
-    },
     onError: (error) => {
       toast.error(error.message);
     },
   });
 
-  return { signIn, signUp, googleSignIn, supabaseGetSession };
+  const supabaseGetSession = useMutation({
+    mutationFn: () => authApi.supabaseGetSession(),
+    meta: { scope: "auth" as const },
+    onSuccess: (user) => {
+      if (user) {
+        setUser({
+          id: user.id,
+          email: user.email as string,
+          role: user.role as string,
+        });
+        navigate("/");
+      }
+    },
+    onError: (error) => {
+      toast.error("세션 가져오기 실패");
+      toast.error(error.message);
+    },
+  });
+
+  return { signIn, signUp, googleSignIn, supabaseGetSession, checkEmailDuplicate };
 }

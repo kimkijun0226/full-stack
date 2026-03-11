@@ -2,18 +2,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Checkbox, Field, FieldError, FieldGroup, FieldLabel, Input, Label, Separator } from "@/components/ui";
-import { useAuth } from "@/hooks";
-import { NavLink, useNavigate } from "react-router-dom";
-import { ArrowLeft, Asterisk, ChevronRight, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useAuth, useImageUpload } from "@/hooks";
+import { NavLink } from "react-router-dom";
+import { ArrowLeft, Asterisk, ChevronRight, ImageOff, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAuthStore } from "@/stores";
+import { AppProfileUpload } from "@/components/common";
 
 const signUpSchema = z
   .object({
     email: z.email({ error: "올바른 형식의 이메일 주소를 입력해주세요." }),
     password: z.string().min(8, { error: "비밀번호는 최소 8자 이상이어야 합니다." }),
     confirmPassword: z.string().min(8, { error: "비밀번호 확인을 입력해주세요." }),
+    nickname: z.string(),
+    profile_image: z.union([z.string(), z.instanceof(File), z.null()]).optional(),
   })
   .superRefine(({ password, confirmPassword }, ctx) => {
     if (password !== confirmPassword) {
@@ -28,31 +30,67 @@ const signUpSchema = z
 type SignUpForm = z.infer<typeof signUpSchema>;
 
 export default function SignUp() {
-  const { signUp } = useAuth();
-  const { user } = useAuthStore();
-  const navigate = useNavigate();
+  const { signUp, supabaseGetSession, checkEmailDuplicate } = useAuth();
+  const { upload } = useImageUpload();
   const form = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { email: "", password: "", confirmPassword: "" },
+    defaultValues: { email: "", password: "", confirmPassword: "", nickname: "", profile_image: null },
   });
 
   const [serviceAgreed, setServiceAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [marketingAgreed, setMarketingAgreed] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const emailValue = form.watch("email");
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const isValidEmail = z.string().email().safeParse(emailValue).success;
+    if (!isValidEmail) return;
+
+    debounceRef.current = setTimeout(() => {
+      checkEmailDuplicate.mutate(emailValue, {
+        onSuccess: (duplicate) => {
+          if (duplicate) {
+            form.setError("email", { message: "이미 사용 중인 이메일입니다." });
+          } else {
+            form.clearErrors("email");
+          }
+        },
+      });
+    }, 400);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailValue]);
 
   // 이미 로그인된 경우 홈으로
   useEffect(() => {
-    if (user?.id) navigate("/", { replace: true });
-  }, [user?.id, navigate]);
+    supabaseGetSession.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const onSubmit = (values: SignUpForm) => {
+  const onSubmit = async (values: SignUpForm) => {
     if (!serviceAgreed || !privacyAgreed) {
       toast.warning("서비스 이용약관 및 개인정보 수집 및 이용 동의를 동의해주세요.");
       return;
     }
+
+    const thumbnailUrl = await upload.mutateAsync(values.profile_image || null);
+
+    if (!thumbnailUrl && values.profile_image) {
+      toast.error("프로필 이미지 업로드에 실패했습니다. 다시 시도해주세요.");
+      return;
+    }
+
     signUp.mutate({
       email: values.email,
       password: values.password,
+      nickname: values.nickname ?? "",
+      profile_image: thumbnailUrl,
       service_agreed: serviceAgreed,
       privacy_agreed: privacyAgreed,
       marketing_agreed: marketingAgreed,
@@ -60,7 +98,7 @@ export default function SignUp() {
   };
 
   return (
-    <main className="w-full h-screen min-h-[720px] flex items-center justify-center p-6 gap-6">
+    <main className="w-full min-h-screen  flex items-center justify-center p-6 gap-6">
       <div className="w-100 max-w-100 flex flex-col px-6 gap-6">
         <div className="flex flex-col">
           <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">회원 가입</h4>
@@ -74,13 +112,22 @@ export default function SignUp() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="sign-up-email">이메일</FieldLabel>
-                    <Input
-                      id="sign-up-email"
-                      placeholder="이메일을 입력해주세요."
-                      aria-invalid={fieldState.invalid}
-                      {...field}
-                    />
+                    <div className="relative inline-flex items-start">
+                      <FieldLabel htmlFor="sign-up-email">이메일</FieldLabel>
+                      <Asterisk size={12} className="text-[#F96859] -mt-0.5" />
+                    </div>
+
+                    <div className="relative">
+                      <Input
+                        id="sign-up-email"
+                        placeholder="이메일을 입력해주세요."
+                        aria-invalid={fieldState.invalid}
+                        {...field}
+                      />
+                      {checkEmailDuplicate.isPending && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-4 animate-spin text-muted-foreground" />
+                      )}
+                    </div>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-xs" />}
                   </Field>
                 )}
@@ -90,7 +137,11 @@ export default function SignUp() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="sign-up-password">비밀번호</FieldLabel>
+                    <div className="relative inline-flex items-start">
+                      <FieldLabel htmlFor="sign-up-password">비밀번호</FieldLabel>
+                      <Asterisk size={12} className="text-[#F96859] -mt-0.5" />
+                    </div>
+
                     <Input
                       id="sign-up-password"
                       type="password"
@@ -107,7 +158,11 @@ export default function SignUp() {
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="sign-up-confirm-password">비밀번호 확인</FieldLabel>
+                    <div className="relative inline-flex items-start">
+                      <FieldLabel htmlFor="sign-up-confirm-password">비밀번호 확인</FieldLabel>
+                      <Asterisk size={12} className="text-[#F96859] -mt-0.5" />
+                    </div>
+
                     <Input
                       id="sign-up-confirm-password"
                       type="password"
@@ -115,6 +170,38 @@ export default function SignUp() {
                       aria-invalid={fieldState.invalid}
                       {...field}
                     />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-xs" />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="nickname"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="sign-up-nickname">닉네임</FieldLabel>
+                    <Input
+                      id="sign-up-nickname"
+                      type="text"
+                      placeholder="닉네임을 입력해주세요."
+                      aria-invalid={fieldState.invalid}
+                      {...field}
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-xs" />}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="profile_image"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="sign-up-profile-image">프로필 이미지</FieldLabel>
+                    <AppProfileUpload file={field.value ?? null} setFile={field.onChange} />
+                    <Button type="button" variant="outline" className="border-0" onClick={() => field.onChange(null)}>
+                      <ImageOff />
+                      프로필 이미지 제거
+                    </Button>
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} className="text-xs" />}
                   </Field>
                 )}

@@ -3,8 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button, Field, FieldError, FieldGroup, FieldLabel, Input } from "@/components/ui";
 import { useAuth } from "@/hooks";
-import { useAuthStore } from "@/stores";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useEffect } from "react";
 
 const signInSchema = z.object({
@@ -15,18 +14,15 @@ const signInSchema = z.object({
 type SignInForm = z.infer<typeof signInSchema>;
 
 export default function SignIn() {
-  const navigate = useNavigate();
-  const { user } = useAuthStore();
-  const { signIn, googleSignIn } = useAuth();
+  const { signIn, googleSignIn, supabaseGetSession } = useAuth();
   const form = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  // 이미 로그인된 경우 홈으로
   useEffect(() => {
-    if (user?.id) navigate("/", { replace: true });
-  }, [user?.id, navigate]);
+    supabaseGetSession.mutate();
+  }, []);
 
   // 일반 로그인
   const onSubmit = (values: SignInForm) => {

@@ -1,9 +1,8 @@
-import { topicApi } from "@/api";
 import { AppEditor, AppFileUpload } from "@/components/common";
 import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { SelectGroup, SelectLabel } from "@/components/ui/select";
 import { TOPIC_CATEGORY } from "@/constants/category.constant";
-import { useTopic, useTopicDetail } from "@/hooks";
+import { useImageUpload, useTopic, useTopicDetail } from "@/hooks";
 import { useAuthStore } from "@/stores";
 import { TOPIC_STATUS, type TOPIC_VISIBILITY } from "@/types";
 import type { Block } from "@blocknote/core";
@@ -19,6 +18,7 @@ export default function CreateTopic() {
 
   const { data: topic, isLoading: topicLoading } = useTopicDetail(id);
   const { updateTopic } = useTopic();
+  const { upload } = useImageUpload();
 
   const [title, setTitle] = useState(topic?.title ?? "");
   const [content, setContent] = useState<Block[]>(topic?.content ? JSON.parse(topic.content) : []);
@@ -26,19 +26,14 @@ export default function CreateTopic() {
   const [thumbnail, setThumbnail] = useState<File | string | null>(topic?.thumbnail ?? null);
   const [visibility, setVisibility] = useState<TOPIC_VISIBILITY>(topic?.visibility ?? "PRIVATE");
 
-  const resolveThumbnailUrl = async (): Promise<string | null> => {
-    if (!thumbnail) return null;
-    if (thumbnail instanceof File) return topicApi.uploadThumbnail(thumbnail);
-    return thumbnail;
-  };
-
   const handleSave = async () => {
     if (!id || !user) return;
     if (!title && !content.length && !category && !thumbnail) {
       toast.warning("제목, 본문, 카테고리, 썸네일을 기입하세요.");
       return;
     }
-    const thumbnailUrl = await resolveThumbnailUrl();
+    const thumbnailUrl = await upload.mutateAsync(thumbnail);
+
     updateTopic.mutate(
       {
         id: Number(id),
@@ -64,11 +59,13 @@ export default function CreateTopic() {
       toast.warning("제목, 본문, 카테고리, 썸네일은 필수입니다.");
       return;
     }
-    const thumbnailUrl = await resolveThumbnailUrl();
+    const thumbnailUrl = await upload.mutateAsync(thumbnail);
+
     if (!thumbnailUrl) {
       toast.warning("썸네일을 등록해주세요.");
       return;
     }
+
     updateTopic.mutate(
       {
         id: Number(id),

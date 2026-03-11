@@ -8,6 +8,8 @@ export type SignInPayload = {
 export type SignUpPayload = {
   email: string;
   password: string;
+  nickname?: string;
+  profile_image?: string | File | null;
   service_agreed: boolean;
   privacy_agreed: boolean;
   marketing_agreed: boolean;
@@ -43,16 +45,28 @@ async function signUp(payload: SignUpPayload): Promise<void> {
   const { user } = authData;
   if (!user) throw new Error("회원 가입에 실패했습니다.");
 
-  const { error: insertError } = await supabase.from("user").insert([
-    {
-      id: user.id,
-      service_agreed: payload.service_agreed,
-      privacy_agreed: payload.privacy_agreed,
-      marketing_agreed: payload.marketing_agreed,
-    },
-  ]);
+  const { error: insertError } = await supabase.from("user").upsert(
+    [
+      {
+        id: user.id,
+        email: user.email ?? "",
+        nickname: payload.nickname ?? "",
+        profile_image: payload.profile_image ?? "",
+        service_agreed: payload.service_agreed,
+        privacy_agreed: payload.privacy_agreed,
+        marketing_agreed: payload.marketing_agreed,
+      },
+    ],
+    { onConflict: "id" },
+  );
 
   if (insertError) throw insertError;
+}
+
+async function checkEmailDuplicate(email: string): Promise<boolean> {
+  const { data, error } = await supabase.from("user").select("id").eq("email", email).maybeSingle();
+  if (error) throw error;
+  return data !== null;
 }
 
 async function signInWithGoogle(): Promise<void> {
@@ -71,6 +85,22 @@ async function supabaseGetSession(): Promise<AuthUser | null> {
   if (error) throw error;
   const session = data.session;
   if (!session?.user) return null;
+
+  const { error: upsertError } = await supabase.from("user").upsert(
+    [
+      {
+        id: session.user.id,
+        email: session.user.email ?? "",
+        service_agreed: true,
+        privacy_agreed: true,
+        marketing_agreed: false,
+      },
+    ],
+    { onConflict: "id" },
+  );
+
+  if (upsertError) throw upsertError;
+
   return {
     id: session.user.id,
     email: session.user.email ?? "",
@@ -83,4 +113,5 @@ export const authApi = {
   signUp,
   signInWithGoogle,
   supabaseGetSession,
+  checkEmailDuplicate,
 };
