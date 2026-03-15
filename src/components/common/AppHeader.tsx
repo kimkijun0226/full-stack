@@ -3,7 +3,8 @@ import { Separator } from "../ui";
 import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { BookText, Users } from "lucide-react";
+import { BookText, CircleUser, Users } from "lucide-react";
+import { useUser } from "@/hooks";
 
 const VIEW_MY = "my";
 const VIEW_COMMUNITY = "community";
@@ -12,6 +13,8 @@ function AppHeader() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, reset } = useAuthStore();
+  const { userInfo } = useUser();
+
   const category = searchParams.get("category") ?? "";
   const view = searchParams.get("view");
   const isCommunityView = !user?.id || view === VIEW_COMMUNITY;
@@ -120,7 +123,14 @@ function AppHeader() {
         {/* 로그인 UI */}
         {user?.id ? (
           <div className="flex items-center gap-5">
-            <span className="text-sm text-white">{user.email}</span>
+            <div className="flex gap-2 items-center">
+              {userInfo?.profile_image ? (
+                <img src={userInfo.profile_image} alt="user profile" className="w-7 h-7 rounded-full object-cover" />
+              ) : (
+                <CircleUser className="w-7 h-7 text-white/70" />
+              )}
+              <span className="text-sm text-white">{userInfo?.nickname || user.email}</span>
+            </div>
             <Separator orientation="vertical" className="!h-4" />
             <span className="text-sm text-white cursor-pointer" onClick={handleLogout}>
               로그아웃

@@ -1,4 +1,6 @@
-import { authApi, type SignInPayload, type SignUpPayload } from "@/api";
+import { authApi, userApi, type SignInPayload, type SignUpPayload } from "@/api";
+import { queryKeys } from "@/constants/queryKeys";
+import { queryClient } from "@/lib/queryClient";
 import { useAuthStore } from "@/stores";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -11,8 +13,12 @@ export function useAuth() {
   const signIn = useMutation({
     mutationFn: (payload: SignInPayload) => authApi.signInWithPassword(payload),
     meta: { scope: "auth" as const },
-    onSuccess: (user) => {
+    onSuccess: async (user) => {
       setUser(user);
+      await queryClient.prefetchQuery({
+        queryKey: queryKeys.user.info(user.id).queryKey,
+        queryFn: () => userApi.getUserInfo(user.id),
+      });
       toast.success("로그인 성공");
       navigate("/");
     },
@@ -21,9 +27,11 @@ export function useAuth() {
   const signUp = useMutation({
     mutationFn: (payload: SignUpPayload) => authApi.signUp(payload),
     meta: { scope: "auth" as const },
-    onSuccess: () => {
+    onSuccess: ({ authUser, profile }) => {
+      setUser(authUser);
+      queryClient.setQueryData(queryKeys.user.info(authUser.id).queryKey, profile);
       toast.success("회원 가입이 완료되었습니다.");
-      navigate("/sign-in");
+      navigate("/");
     },
   });
 
@@ -46,12 +54,16 @@ export function useAuth() {
   const supabaseGetSession = useMutation({
     mutationFn: () => authApi.supabaseGetSession(),
     meta: { scope: "auth" as const },
-    onSuccess: (user) => {
+    onSuccess: async (user) => {
       if (user) {
         setUser({
           id: user.id,
           email: user.email as string,
           role: user.role as string,
+        });
+        await queryClient.prefetchQuery({
+          queryKey: queryKeys.user.info(user.id).queryKey,
+          queryFn: () => userApi.getUserInfo(user.id),
         });
         navigate("/");
       }

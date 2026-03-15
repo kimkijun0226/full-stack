@@ -34,6 +34,7 @@ export default function SignUp() {
   const { upload } = useImageUpload();
   const form = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
+    mode: "onTouched",
     defaultValues: { email: "", password: "", confirmPassword: "", nickname: "", profile_image: null },
   });
 
