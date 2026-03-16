@@ -92,8 +92,15 @@ export function AppNotificationDropdown() {
                       notification.is_read ? "bg-transparent" : "bg-blue-400",
                     )}
                   />
+                  {notification.thumbnail && (
+                    <img
+                      src={notification.thumbnail}
+                      alt="썸네일"
+                      className="h-12 w-12 shrink-0 rounded-md object-cover"
+                    />
+                  )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-white/90">{notification.content}</p>
+                    <p className="whitespace-pre-line text-sm text-white/90">{notification.content}</p>
                     <p className="mt-0.5 text-xs text-white/40">{dayjs(notification.created_at).fromNow()}</p>
                   </div>
                 </button>

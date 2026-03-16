@@ -27,27 +27,41 @@ export const useNotification = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const channel = supabase
-      .channel("notification")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notification",
-          filter: `receiver_id=eq.${user.id}`,
-        },
-        (payload) => {
-          // 새 알림 오면 쿼리 무효화
-          queryClient.invalidateQueries({ queryKey: ["notification"] });
-          // 토스트로 알림 표시
-          toast.info(payload.new.content);
-        },
-      )
-      .subscribe();
+    let cancelled = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
+      // Supabase JWT 세션이 복원될 때까지 대기
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (cancelled || !session) return;
+
+      channel = supabase
+        .channel(`notification:${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notification",
+            filter: `receiver_id=eq.${user.id}`,
+          },
+          (payload) => {
+            queryClient.invalidateQueries({ queryKey: ["notification"] });
+            toast.info(payload.new.content);
+          },
+        )
+        .subscribe((status, err) => {
+          if (err) console.error("[Realtime] 구독 오류:", err);
+          console.log("[Realtime] 알림 구독 상태:", status);
+        });
+    })();
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
     };
   }, [user?.id, queryClient]);
 

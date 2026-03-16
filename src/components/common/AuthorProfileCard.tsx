@@ -1,8 +1,9 @@
 import type { UserInfo } from "@/api";
 import { Button, Card, CardContent, Separator } from "@/components/ui";
 import { useFollow } from "@/hooks";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
-import { BadgeCheck, UserPlus, UserRoundSearch } from "lucide-react";
+import { BadgeCheck, UserMinus, UserPlus, UserRoundSearch } from "lucide-react";
 import { useState } from "react";
 
 type AuthorProfileCardProps = {
@@ -49,11 +50,16 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
               type="button"
               variant="secondary"
               size="sm"
-              className="w-full rounded-xl bg-white/6 text-xs font-medium text-white hover:bg-white/10"
+              className={cn(
+                "w-full rounded-xl text-xs font-medium transition",
+                isFollowing
+                  ? "bg-red-500/15 text-red-400 hover:bg-red-500/25"
+                  : "bg-white/6 text-white hover:bg-white/10",
+              )}
               onClick={toggleFollow}
               disabled={isLoading || user?.id === authorInfo?.id}
             >
-              <UserPlus className="h-3.5 w-3.5" />
+              {isFollowing ? <UserMinus className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
               {isFollowing ? "언팔로우" : "팔로우"}
             </Button>
 

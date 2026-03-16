@@ -8,6 +8,7 @@ export type Notification = {
   content: string;
   is_read: boolean;
   link: string;
+  thumbnail: string | null;
   created_at: string;
 };
 
