@@ -5,3 +5,4 @@ export { AppEditor } from "./AppEditor";
 export { AppFileUpload } from "./AppFileUpload";
 export { AppDraftsDialog } from "./AppDraftsDialog";
 export { AppProfileUpload } from "./AppProfileUpload";
+export { AuthorProfileCard } from "./AuthorProfileCard";
