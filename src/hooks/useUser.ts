@@ -5,11 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useUser = () => {
   const { user } = useAuthStore();
+  return useUserInfo(user?.id);
+};
 
+export const useUserInfo = (userId?: string | null) => {
   const userInfoQuery = useQuery({
-    queryKey: queryKeys.user.info(user?.id || "").queryKey,
-    queryFn: () => userApi.getUserInfo(user?.id || ""),
-    enabled: !!user?.id,
+    queryKey: queryKeys.user.info(userId || "").queryKey,
+    queryFn: () => userApi.getUserInfo(userId || ""),
+    enabled: !!userId,
   });
 
   return {
