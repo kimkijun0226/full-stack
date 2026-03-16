@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { CircleUser, FileText, Globe2 } from "lucide-react";
 import { useUser } from "@/hooks";
 import { AppHeaderMenu } from "./AppHeaderMenu";
+import { AppNotificationDropdown } from "./AppNotificationDropDown";
 
 const VIEW_MY = "my";
 const VIEW_COMMUNITY = "community";
@@ -126,24 +127,28 @@ function AppHeader() {
             </div>
           </div>
 
-          {user?.id ? (
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/8 px-2.5 py-1 text-white/90 transition hover:border-white/35 hover:bg-white/12"
-              onClick={() => setMenuOpen(true)}
-            >
-              {userInfo?.profile_image ? (
-                <img src={userInfo.profile_image} alt="user profile" className="h-8 w-8 rounded-full object-cover" />
-              ) : (
-                <CircleUser className="h-8 w-8 text-white/70" />
-              )}
-              <span className="max-w-[132px] truncate text-sm">{userInfo?.nickname || user.email}</span>
-            </button>
-          ) : (
-            <NavLink to="/sign-in" className="text-sm text-white/90 transition hover:text-white">
-              로그인
-            </NavLink>
-          )}
+          <div className="flex items-center gap-2">
+            {/* 알림 아이콘 - 로그인 시에만 */}
+            {user?.id && <AppNotificationDropdown />}
+            {user?.id ? (
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/8 px-2.5 py-1 text-white/90 transition hover:border-white/35 hover:bg-white/12"
+                onClick={() => setMenuOpen(true)}
+              >
+                {userInfo?.profile_image ? (
+                  <img src={userInfo.profile_image} alt="user profile" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <CircleUser className="h-8 w-8 text-white/70" />
+                )}
+                <span className="max-w-[132px] truncate text-sm">{userInfo?.nickname || user.email}</span>
+              </button>
+            ) : (
+              <NavLink to="/sign-in" className="text-sm text-white/90 transition hover:text-white">
+                로그인
+              </NavLink>
+            )}
+          </div>
         </div>
       </header>
 

@@ -3,3 +3,4 @@ export { useTopic, useTopicDetail, useMyTopics, useCommunityTopics } from "./use
 export { useImageUpload } from "./useImageUpload";
 export { useUser, useUserInfo } from "./useUser";
 export { useFollow } from "./useFollow";
+export { useNotification } from "./useNotification";
