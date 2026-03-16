@@ -97,7 +97,7 @@ function App() {
   };
 
   return (
-    <main className="w-full h-full min-h-screen flex p-6 gap-6">
+    <main className="w-full h-full min-h-screen flex p-6 gap-6 mt-4">
       <div className="fixed right-1/2 bottom-10 translate-x-1/2 z-20 flex items-center gap-2 p-1.5 rounded-full border border-sky-200/60 bg-white/65 dark:border-sky-500/15 dark:bg-slate-950/40 shadow-2xl shadow-black/10 ring-1 ring-sky-300/15 dark:ring-sky-500/10 backdrop-blur-xl supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-slate-950/45">
         <Button
           variant="ghost"
@@ -129,7 +129,7 @@ function App() {
         <AppSidebar />
       </div>
       {/* 글 목록 */}
-      <section className="w-full lg:w-[calc(100%-264px)] flex flex-col gap-12">
+      <section className="w-full lg:w-[calc(100%-264px)] flex flex-col gap-12 ">
         <div className="w-full flex flex-col gap-6">
           {/* 모바일/태블릿 카테고리 (화살표로 넘기는 가로 필터) */}
           <div className="lg:hidden flex items-center gap-1">

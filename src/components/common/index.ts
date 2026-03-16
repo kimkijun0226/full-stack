@@ -1,4 +1,5 @@
 export { AppHeader } from "./AppHeader";
+export { AppHeaderMenu } from "./AppHeaderMenu";
 export { AppFooter } from "./AppFooter";
 export { AppSidebar } from "./AppSidebar";
 export { AppEditor } from "./AppEditor";

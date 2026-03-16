@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/stores";
 import {
@@ -13,7 +13,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui";
 import { useTopic, useTopicDetail, useUserInfo } from "@/hooks";
 import { AppEditor, AuthorProfileCard } from "@/components/common";
@@ -56,27 +55,37 @@ export function TopicDetail() {
           </Button>
           {/* 토픽을 작성한 사람의 user_id와 로그인한 사람의 user_id가 같은 경우에만 보이도록 한다. */}
           {topic?.author === user?.id && (
-            <AlertDialog>
-              <AlertDialogTrigger>
-                <Button variant="outline" size="icon" className="!bg-red-800/50">
-                  <Trash2 />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>정말 해당 토픽을 삭제하시겠습니까?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    삭제하시면 해당 토픽의 모든 내용이 영구적으로 삭제되어 복구할 수 없습니다.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>닫기</AlertDialogCancel>
-                  <AlertDialogAction className="bg-red-800/50 text-white hover:bg-red-700/50" onClick={handleDelete}>
-                    삭제
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                className="!bg-sky-800/50"
+                onClick={() => navigate(`/topics/${id}/update`)}
+              >
+                <Pencil />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger>
+                  <Button variant="outline" size="icon" className="!bg-red-800/50">
+                    <Trash2 />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>정말 해당 토픽을 삭제하시겠습니까?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      삭제하시면 해당 토픽의 모든 내용이 영구적으로 삭제되어 복구할 수 없습니다.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>닫기</AlertDialogCancel>
+                    <AlertDialogAction className="bg-red-800/50 text-white hover:bg-red-700/50" onClick={handleDelete}>
+                      삭제
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
           )}
         </div>
         {/* 좌, 우, 하단 그라데이션 */}
