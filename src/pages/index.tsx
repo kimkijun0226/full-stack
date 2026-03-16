@@ -1,4 +1,5 @@
-import { NotebookPen, PencilLine } from "lucide-react";
+import { useRef } from "react";
+import { ChevronLeft, ChevronRight, NotebookPen, PencilLine } from "lucide-react";
 import { AppDraftsDialog, AppSidebar } from "../components/common";
 import { SkeletonHotTopic } from "../components/skeleton";
 import { Button } from "../components/ui";
@@ -8,6 +9,8 @@ import { toast } from "sonner";
 import { useTopic, useMyTopics, useCommunityTopics } from "@/hooks";
 import { NewTopicCard } from "@/components/topics";
 import type { Topic } from "@/types";
+import { CLASS_CATEGORY } from "@/constants/category.constant";
+import { cn } from "@/lib/utils";
 
 const VIEW_MY = "my";
 const VIEW_COMMUNITY = "community";
@@ -28,6 +31,25 @@ function App() {
   const isMyView = view === VIEW_MY;
   const list = isMyView ? myTopics : communityTopics;
   const listLoading = isMyView ? myLoading : communityLoading;
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const makeCategorySearch = (nextCategory: string) => {
+    const params = new URLSearchParams();
+    if (!isMyView) params.set("view", VIEW_COMMUNITY);
+    if (nextCategory) params.set("category", nextCategory);
+    const query = params.toString();
+    return query ? `?${query}` : "";
+  };
+
+  const handleCategorySlide = (direction: "left" | "right") => {
+    const container = categoryScrollRef.current;
+    if (!container) return;
+
+    container.scrollBy({
+      left: direction === "right" ? 220 : -220,
+      behavior: "smooth",
+    });
+  };
 
   const handleRoute = async () => {
     if (!user || !user.id || !user.email || !user.role) {
@@ -109,8 +131,61 @@ function App() {
       {/* 글 목록 */}
       <section className="w-full lg:w-[calc(100%-264px)] flex flex-col gap-12">
         <div className="w-full flex flex-col gap-6">
+          {/* 모바일/태블릿 카테고리 (화살표로 넘기는 가로 필터) */}
+          <div className="lg:hidden flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => handleCategorySlide("left")}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/8 text-white/80 transition hover:bg-white/15 hover:text-white"
+              aria-label="카테고리 왼쪽으로 이동"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <div
+              ref={categoryScrollRef}
+              className="-mx-1 flex-1 overflow-x-auto py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <div className="inline-flex min-w-full items-center gap-2 px-1">
+                {CLASS_CATEGORY.map((menu) => {
+                  const isActive = category === menu.category;
+                  return (
+                    <button
+                      key={menu.id}
+                      type="button"
+                      onClick={() => navigate({ pathname: "/", search: makeCategorySearch(menu.category) })}
+                      className={cn(
+                        "inline-flex shrink-0 items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition",
+                        isActive
+                          ? "border-white/35 bg-white/15 text-white"
+                          : "border-white/10 bg-white/5 text-white/70 hover:border-white/25 hover:text-white",
+                      )}
+                    >
+                      {menu.icon}
+                      <span>{menu.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleCategorySlide("right")}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/8 text-white/80 transition hover:bg-white/15 hover:text-white"
+              aria-label="카테고리 오른쪽으로 이동"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
           <div className="flex flex-col gap-1">
-            <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">{isMyView ? "나의 글" : "커뮤니티"}</h4>
+            <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">
+              {isMyView ? "나의 글" : "커뮤니티"}
+              <span className="ml-2 text-base font-normal text-muted-foreground">
+                ({CLASS_CATEGORY.find((c) => c.category === category)?.label ?? "전체"})
+              </span>
+            </h4>
             <p className="md:text-base text-muted-foreground">
               {isMyView
                 ? "내가 발행한 글, 독후감, 여행일지 등을 모아봤어요."

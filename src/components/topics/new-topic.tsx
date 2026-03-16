@@ -58,7 +58,10 @@ export function NewTopicCard({ props }: Props) {
   const navigate = useNavigate();
 
   return (
-    <Card className="w-full h-fit p-4 gap-4 cursor-pointer" onClick={() => navigate(`/topics/${props.id}/detail`)}>
+    <Card
+      className="w-full h-fit p-4 gap-4 cursor-pointer hover:scale-102 transition-transform duration-200 ease-out"
+      onClick={() => navigate(`/topics/${props.id}/detail`)}
+    >
       <div className="flex items-start gap-4">
         <div className="flex-1 flex flex-col items-start gap-4">
           {/* 썸네일과 제목 */}
