@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui";
-import { useTopic, useTopicDetail } from "@/hooks";
-import { AppEditor } from "@/components/common";
+import { useTopic, useTopicDetail, useUserInfo } from "@/hooks";
+import { AppEditor, AuthorProfileCard } from "@/components/common";
 import { toast } from "sonner";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -29,6 +29,7 @@ export function TopicDetail() {
   const { user } = useAuthStore();
   const { id } = useParams();
   const { data: topic } = useTopicDetail(id);
+  const { userInfo: authorInfo } = useUserInfo(topic?.author);
   const { deleteTopic } = useTopic();
 
   const handleDelete = async () => {
@@ -43,7 +44,7 @@ export function TopicDetail() {
   }
 
   return (
-    <main className="w-full h-full min-h-screen flex flex-col">
+    <main className="w-full min-h-screen flex flex-col relative">
       <div
         className="relative w-full h-60 md:h-100 bg-cover bg-[50%_35%] bg-accent"
         style={{ backgroundImage: `url(${topic?.thumbnail})` }}
@@ -80,7 +81,7 @@ export function TopicDetail() {
         </div>
         {/* 좌, 우, 하단 그라데이션 */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-transparent to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#161212] via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-l from-[#0a0a0a] via-transparent to-transparent"></div>
       </div>
 
@@ -94,8 +95,12 @@ export function TopicDetail() {
       </section>
 
       {/* 에디터 내용을 불러와 렌더링 */}
-      <div className="w-full pt-12 pb-6">
-        {topic?.content && <AppEditor content={JSON.parse(topic?.content ?? "")} readonly />}
+      <div className="mx-auto  flex w-full max-w-[1240px] flex-col gap-6 px-4 pt-12 pb-6 lg:flex-row lg:items-start lg:justify-center">
+        <div className="min-w-0 flex-1 lg:max-w-[840px]">
+          {topic?.content && <AppEditor content={JSON.parse(topic?.content ?? "")} readonly />}
+        </div>
+
+        <AuthorProfileCard authorInfo={authorInfo} />
       </div>
     </main>
   );
