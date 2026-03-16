@@ -1,12 +1,20 @@
 import type { UserInfo } from "@/api";
 import { Button, Card, CardContent, Separator } from "@/components/ui";
+import { useFollow } from "@/hooks";
+import { useAuthStore } from "@/stores";
 import { BadgeCheck, UserPlus, UserRoundSearch } from "lucide-react";
+import { useState } from "react";
 
 type AuthorProfileCardProps = {
   authorInfo: UserInfo | null | undefined;
 };
 
 function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
+  const [isImageError, setIsImageError] = useState(false);
+  const hasProfileImage = !!authorInfo?.profile_image && !isImageError;
+  const { user } = useAuthStore();
+  const { isFollowing, followerCount, toggleFollow, isLoading } = useFollow(authorInfo?.id ?? "");
+
   return (
     <aside className="w-full lg:sticky lg:top-24 lg:w-52 lg:shrink-0">
       <Card className="rounded-2xl border-white/10 bg-[#121212] py-0">
@@ -17,14 +25,15 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
                 <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
                 <h3 className="truncate text-sm font-semibold text-white">{authorInfo?.nickname || "작성자"}</h3>
               </div>
-              <p className="text-xs text-white/50">팔로우 0 명</p>
+              <p className="text-xs text-white/50">팔로우 {followerCount} 명</p>
             </div>
 
-            {authorInfo?.profile_image ? (
+            {hasProfileImage ? (
               <img
-                src={authorInfo.profile_image}
+                src={authorInfo.profile_image ?? undefined}
                 alt="author profile"
                 className="h-10 w-10 rounded-full object-cover"
+                onError={() => setIsImageError(true)}
               />
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/8 text-xs text-white/50">
@@ -41,10 +50,13 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
               variant="secondary"
               size="sm"
               className="w-full rounded-xl bg-white/6 text-xs font-medium text-white hover:bg-white/10"
+              onClick={toggleFollow}
+              disabled={isLoading || user?.id === authorInfo?.id}
             >
               <UserPlus className="h-3.5 w-3.5" />
-              팔로우
+              {isFollowing ? "언팔로우" : "팔로우"}
             </Button>
+
             <Button
               type="button"
               variant="secondary"

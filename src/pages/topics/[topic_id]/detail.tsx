@@ -31,6 +31,9 @@ export function TopicDetail() {
   const { userInfo: authorInfo } = useUserInfo(topic?.author);
   const { deleteTopic } = useTopic();
 
+  console.log("topic", topic);
+  console.log("authorInfo", authorInfo);
+
   const handleDelete = async () => {
     deleteTopic.mutate(Number(id));
     navigate("/");
@@ -65,7 +68,7 @@ export function TopicDetail() {
                 <Pencil />
               </Button>
               <AlertDialog>
-                <AlertDialogTrigger>
+                <AlertDialogTrigger asChild>
                   <Button variant="outline" size="icon" className="!bg-red-800/50">
                     <Trash2 />
                   </Button>

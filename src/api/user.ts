@@ -13,7 +13,11 @@ export type UserInfo = {
 };
 
 const getUserInfo = async (id: string): Promise<UserInfo | null> => {
-  const { data, error } = await supabase.from("user").select("*").eq("id", id).maybeSingle();
+  const { data, error } = await supabase
+    .from("user")
+    .select("id, nickname, profile_image, email") // 필요한 것만!
+    .eq("id", id)
+    .maybeSingle();
 
   if (error) throw error;
   return data as UserInfo | null;

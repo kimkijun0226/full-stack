@@ -11,7 +11,16 @@ export const useUser = () => {
 export const useUserInfo = (userId?: string | null) => {
   const userInfoQuery = useQuery({
     queryKey: queryKeys.user.info(userId || "").queryKey,
-    queryFn: () => userApi.getUserInfo(userId || ""),
+    queryFn: async () => {
+      if (!userId) return null;
+
+      try {
+        return await userApi.getUserInfo(userId);
+      } catch {
+        // 다른 작성자 정보가 조회 불가한 경우에도 상세 화면은 계속 렌더링한다.
+        return null;
+      }
+    },
     enabled: !!userId,
   });
 
