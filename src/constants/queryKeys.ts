@@ -21,4 +21,12 @@ export const userKeys = createQueryKeys("user", {
   info: (userId: string) => [userId],
 });
 
-export const queryKeys = { topic: topicKeys, user: userKeys };
+export const commentKeys = createQueryKeys("comment", {
+  list: (topicId: number) => [topicId],
+});
+
+export const likeKeys = createQueryKeys("like", {
+  topic: (topicId: number) => [topicId],
+});
+
+export const queryKeys = { topic: topicKeys, user: userKeys, comment: commentKeys, like: likeKeys };
