@@ -1,11 +1,12 @@
 import { useNotification } from "@/hooks";
-import { Bell, UserPlus } from "lucide-react";
+import { Bell, FileText, Heart, MessageCircle, UserPlus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
 import { cn } from "@/lib/utils";
+import type { NotificationType } from "@/api";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -52,14 +53,14 @@ export function AppNotificationDropdown() {
 
       {/* 드롭다운 */}
       {isOpen && (
-        <div className="absolute right-0 top-11 z-50 w-80 rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl">
+        <div className="absolute right-0 top-11 z-50 w-80 rounded-xl border border-border bg-card shadow-2xl">
           {/* 헤더 */}
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <span className="text-sm font-semibold text-white">알림</span>
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <span className="text-sm font-semibold text-foreground">알림</span>
             {unreadCount > 0 && (
               <button
                 type="button"
-                className="text-xs text-white/50 transition hover:text-white"
+                className="text-xs text-foreground/50 transition hover:text-foreground"
                 onClick={() => markAllAsRead.mutate()}
               >
                 모두 읽음
@@ -70,7 +71,7 @@ export function AppNotificationDropdown() {
           {/* 알림 목록 */}
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 py-12 text-white/30">
+              <div className="flex flex-col items-center justify-center gap-2 py-12 text-foreground/30">
                 <Bell className="h-8 w-8" />
                 <p className="text-sm">알림이 없습니다</p>
               </div>
@@ -80,8 +81,8 @@ export function AppNotificationDropdown() {
                   key={notification.id}
                   type="button"
                   className={cn(
-                    "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/5",
-                    !notification.is_read && "bg-white/3",
+                    "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-foreground/5",
+                    !notification.is_read && "bg-foreground/3",
                   )}
                   onClick={() => handleNotificationClick(notification.id, notification.link)}
                 >
@@ -92,19 +93,8 @@ export function AppNotificationDropdown() {
                       notification.is_read ? "bg-transparent" : "bg-blue-400",
                     )}
                   />
-                  {/* 타입별 아이콘 (썸네일 없을 때) */}
-                  {!notification.thumbnail && (
-                    <div
-                      className={cn(
-                        "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                        notification.type === "follow"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : "bg-white/10 text-white/50",
-                      )}
-                    >
-                      {notification.type === "follow" ? <UserPlus className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
-                    </div>
-                  )}
+                  {/* 타입별 아이콘 */}
+                  {!notification.thumbnail && <NotificationIcon type={notification.type} />}
                   {notification.thumbnail && (
                     <img
                       src={notification.thumbnail}
@@ -113,8 +103,8 @@ export function AppNotificationDropdown() {
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="whitespace-pre-line text-sm text-white/90">{notification.content}</p>
-                    <p className="mt-0.5 text-xs text-white/40">{dayjs(notification.created_at).fromNow()}</p>
+                    <p className="whitespace-pre-line text-sm text-foreground/90">{notification.content}</p>
+                    <p className="mt-0.5 text-xs text-foreground/40">{dayjs(notification.created_at).fromNow()}</p>
                   </div>
                 </button>
               ))
@@ -123,5 +113,20 @@ export function AppNotificationDropdown() {
         </div>
       )}
     </div>
+  );
+}
+
+function NotificationIcon({ type }: { type: NotificationType }) {
+  const map: Record<NotificationType, { icon: React.ReactNode; className: string }> = {
+    follow: { icon: <UserPlus className="h-4 w-4" />, className: "bg-emerald-500/20 text-emerald-400" },
+    new_post: { icon: <FileText className="h-4 w-4" />, className: "bg-foreground/10 text-foreground/50" },
+    comment: { icon: <MessageCircle className="h-4 w-4" />, className: "bg-blue-500/20 text-blue-400" },
+    reply: { icon: <MessageCircle className="h-4 w-4" />, className: "bg-indigo-500/20 text-indigo-400" },
+    topic_like: { icon: <Heart className="h-4 w-4" />, className: "bg-rose-500/20 text-rose-400" },
+    comment_like: { icon: <Heart className="h-4 w-4" />, className: "bg-pink-500/20 text-pink-400" },
+  };
+  const { icon, className } = map[type] ?? map.new_post;
+  return (
+    <div className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full", className)}>{icon}</div>
   );
 }

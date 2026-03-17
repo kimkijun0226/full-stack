@@ -1,10 +1,12 @@
 import supabase from "@/lib/supabase";
 
+export type NotificationType = "follow" | "new_post" | "comment" | "reply" | "topic_like" | "comment_like";
+
 export type Notification = {
   id: string;
   receiver_id: string;
   sender_id: string;
-  type: "follow" | "new_post";
+  type: NotificationType;
   content: string;
   is_read: boolean;
   link: string;
@@ -40,9 +42,24 @@ const markAllAsRead = async (): Promise<void> => {
   if (error) throw error;
 };
 
+// 알림 생성 (sender === receiver이면 생략)
+const createNotification = async (payload: {
+  receiver_id: string;
+  sender_id: string;
+  type: NotificationType;
+  content: string;
+  link: string;
+  thumbnail?: string | null;
+}): Promise<void> => {
+  if (payload.receiver_id === payload.sender_id) return;
+  const { error } = await supabase.from("notification").insert(payload);
+  if (error) throw error;
+};
+
 export const notificationApi = {
   getNotifications,
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+  createNotification,
 };
