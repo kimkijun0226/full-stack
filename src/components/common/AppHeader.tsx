@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore, useSearchStore } from "@/stores";
 import { toast } from "sonner";
 import { CircleUser, Home, MessageCircle, Search } from "lucide-react";
@@ -8,63 +8,14 @@ import { useDmUnreadCount } from "@/hooks";
 import { AppHeaderMenu } from "./AppHeaderMenu";
 import { AppNotificationDropdown } from "./AppNotificationDropDown";
 
-const VIEW_MY = "my";
-const VIEW_COMMUNITY = "community";
-
 function AppHeader() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user, reset } = useAuthStore();
   const { userInfo } = useUser();
   const { data: dmUnreadCount = 0 } = useDmUnreadCount();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const { searchOpen, setSearchOpen } = useSearchStore();
-
-  const category = searchParams.get("category") ?? "";
-
-  const view = searchParams.get("view");
-  const isCommunityView = !user?.id || view === VIEW_COMMUNITY;
-  const activeView = isCommunityView ? VIEW_COMMUNITY : VIEW_MY;
-
-  const communitySearch = category ? `?view=community&category=${category}` : "?view=community";
-  const mySearch = user?.id ? (category ? `?category=${category}` : "") : communitySearch;
-
-  const handleViewChange = (nextView: string) => {
-    if (!user?.id && nextView === VIEW_MY) {
-      toast(
-        <>
-          로그인이 필요한 서비스 입니다.
-          <br />
-          로그인 페이지로 이동 하시겠습니까?
-        </>,
-        {
-          action: {
-            label: "예",
-            onClick: () => navigate("/sign-in"),
-          },
-          cancel: {
-            label: "아니오",
-            onClick: () => {},
-          },
-          invert: true,
-        },
-      );
-      return;
-    }
-
-    if (nextView === VIEW_COMMUNITY) {
-      navigate({ pathname: "/", search: communitySearch });
-      return;
-    }
-
-    navigate({ pathname: "/", search: mySearch });
-  };
-
-  const handleMenuViewChange = (nextView: string) => {
-    handleViewChange(nextView);
-    setMenuOpen(false);
-  };
 
   const handleLogout = async () => {
     try {
