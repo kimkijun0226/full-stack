@@ -3,8 +3,9 @@ import { NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "@/stores";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { CircleUser, FileText, Globe2 } from "lucide-react";
+import { CircleUser, FileText, Globe2, MessageCircle } from "lucide-react";
 import { useUser } from "@/hooks";
+import { useDmUnreadCount } from "@/hooks";
 import { AppHeaderMenu } from "./AppHeaderMenu";
 import { AppNotificationDropdown } from "./AppNotificationDropDown";
 
@@ -16,6 +17,7 @@ function AppHeader() {
   const [searchParams] = useSearchParams();
   const { user, reset } = useAuthStore();
   const { userInfo } = useUser();
+  const { data: dmUnreadCount = 0 } = useDmUnreadCount();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const category = searchParams.get("category") ?? "";
@@ -128,6 +130,22 @@ function AppHeader() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* DM 아이콘 - 로그인 시에만 */}
+            {user?.id && (
+              <button
+                type="button"
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/8 text-white/70 transition hover:border-white/35 hover:bg-white/12 hover:text-white"
+                onClick={() => navigate("/dm")}
+                title="다이렉트 메시지"
+              >
+                <MessageCircle className="h-4 w-4" />
+                {dmUnreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white">
+                    {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
+                  </span>
+                )}
+              </button>
+            )}
             {/* 알림 아이콘 - 로그인 시에만 */}
             {user?.id && <AppNotificationDropdown />}
             {user?.id ? (

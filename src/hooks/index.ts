@@ -4,3 +4,4 @@ export { useImageUpload } from "./useImageUpload";
 export { useUser, useUserInfo } from "./useUser";
 export { useFollow } from "./useFollow";
 export { useNotification } from "./useNotification";
+export { useDmRooms, useDmMessages, useGetOrCreateRoom, useSendMessage, useDmUnreadCount } from "./useDm";

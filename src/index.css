@@ -145,7 +145,7 @@
   .container {
     width: 100%;
     max-width: 1328px;
-    padding-top: 48px;
+    padding-top: 60px;
     flex: 1;
   }
 }

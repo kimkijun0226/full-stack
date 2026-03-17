@@ -1,10 +1,11 @@
 import type { UserInfo } from "@/api";
 import { Button, Card, CardContent, Separator } from "@/components/ui";
-import { useFollow } from "@/hooks";
+import { useFollow, useGetOrCreateRoom } from "@/hooks";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores";
-import { BadgeCheck, UserMinus, UserPlus, UserRoundSearch } from "lucide-react";
+import { BadgeCheck, MessageCircle, UserMinus, UserPlus } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 type AuthorProfileCardProps = {
   authorInfo: UserInfo | null | undefined;
@@ -15,9 +16,18 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
   const hasProfileImage = !!authorInfo?.profile_image && !isImageError;
   const { user } = useAuthStore();
   const { isFollowing, followerCount, toggleFollow, isLoading } = useFollow(authorInfo?.id ?? "");
+  const navigate = useNavigate();
+  const getOrCreate = useGetOrCreateRoom();
+
+  const handleDm = () => {
+    if (!authorInfo?.id) return;
+    getOrCreate.mutate(authorInfo.id, {
+      onSuccess: (roomId) => navigate(`/dm?room=${roomId}`),
+    });
+  };
 
   return (
-    <aside className="w-full lg:sticky lg:top-24 lg:w-52 lg:shrink-0">
+    <aside className="w-full lg:sticky lg:top-[68px] lg:w-52 lg:shrink-0">
       <Card className="rounded-2xl border-white/10 bg-[#121212] py-0">
         <CardContent className="p-4">
           <div className="flex items-center justify-between gap-2">
@@ -68,9 +78,11 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
               variant="secondary"
               size="sm"
               className="w-full rounded-xl bg-white/6 text-xs font-medium text-white hover:bg-white/10"
+              onClick={handleDm}
+              disabled={getOrCreate.isPending || user?.id === authorInfo?.id}
             >
-              <UserRoundSearch className="h-3.5 w-3.5" />
-              프로필
+              <MessageCircle className="h-3.5 w-3.5" />
+              DM
             </Button>
           </div>
         </CardContent>

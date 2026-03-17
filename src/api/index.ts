@@ -3,3 +3,4 @@ export { topicApi, type TopicCreatePayload, type TopicUpdatePayload } from "./to
 export { userApi, type UserInfo } from "./user";
 export { followApi } from "./follow";
 export { notificationApi } from "./notification";
+export { dmApi, type DmRoom, type DmMessage } from "./dm";

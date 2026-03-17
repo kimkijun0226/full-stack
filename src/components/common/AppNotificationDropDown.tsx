@@ -1,5 +1,5 @@
 import { useNotification } from "@/hooks";
-import { Bell } from "lucide-react";
+import { Bell, UserPlus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -92,6 +92,19 @@ export function AppNotificationDropdown() {
                       notification.is_read ? "bg-transparent" : "bg-blue-400",
                     )}
                   />
+                  {/* 타입별 아이콘 (썸네일 없을 때) */}
+                  {!notification.thumbnail && (
+                    <div
+                      className={cn(
+                        "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+                        notification.type === "follow"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-white/10 text-white/50",
+                      )}
+                    >
+                      {notification.type === "follow" ? <UserPlus className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
+                    </div>
+                  )}
                   {notification.thumbnail && (
                     <img
                       src={notification.thumbnail}
