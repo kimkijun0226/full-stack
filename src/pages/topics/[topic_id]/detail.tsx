@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui";
-import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Heart, Pencil, Share2, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthStore } from "@/stores";
 import {
@@ -14,11 +14,12 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui";
-import { useTopic, useTopicDetail, useUserInfo } from "@/hooks";
-import { AppEditor, AuthorProfileCard } from "@/components/common";
+import { useTopic, useTopicDetail, useUserInfo, useToggleTopicLike, useTopicLike, useShareTopic } from "@/hooks";
+import { AppEditor, AuthorProfileCard, AppCommentSection } from "@/components/common";
 import { toast } from "sonner";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { cn } from "@/lib/utils";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -27,9 +28,13 @@ export function TopicDetail() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { id } = useParams();
+  const topicId = Number(id);
   const { data: topic } = useTopicDetail(id);
   const { userInfo: authorInfo } = useUserInfo(topic?.author);
   const { deleteTopic } = useTopic();
+  const { data: likeInfo } = useTopicLike(topicId);
+  const toggleLike = useToggleTopicLike(topicId, topic?.author);
+  const shareTopic = useShareTopic(topicId);
 
   console.log("topic", topic);
   console.log("authorInfo", authorInfo);
@@ -38,6 +43,20 @@ export function TopicDetail() {
     deleteTopic.mutate(Number(id));
     navigate("/");
     toast.success("토픽이 삭제되었습니다.");
+  };
+
+  const handleLike = () => {
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      return;
+    }
+    toggleLike.mutate(likeInfo?.isLiked ?? false);
+  };
+
+  const handleShare = () => {
+    shareTopic.mutate(window.location.href, {
+      onSuccess: () => toast.success("링크가 복사되었습니다!"),
+    });
   };
 
   function formatCreatedAt(createdAt: string) {
@@ -110,6 +129,37 @@ export function TopicDetail() {
       <div className="mx-auto  flex w-full max-w-[1240px] flex-col gap-6 px-4 pt-12 pb-6 lg:flex-row lg:items-start lg:justify-center">
         <div className="min-w-0 flex-1 lg:max-w-[840px]">
           {topic?.content && <AppEditor content={JSON.parse(topic?.content ?? "")} readonly />}
+
+          {/* 좋아요 / 공유 바 */}
+          <div className="mt-8 flex items-center gap-4 border-t border-b border-border py-4">
+            <button
+              type="button"
+              className={cn(
+                "flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition",
+                likeInfo?.isLiked
+                  ? "border-rose-500/40 bg-rose-500/10 text-rose-500"
+                  : "border-border text-foreground/60 hover:border-rose-400/40 hover:bg-rose-500/5 hover:text-rose-500",
+              )}
+              onClick={handleLike}
+            >
+              <Heart className={cn("h-4 w-4", likeInfo?.isLiked && "fill-rose-500")} />
+              <span>{likeInfo?.count ?? 0}</span>
+            </button>
+
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-foreground/60 transition hover:border-foreground/30 hover:text-foreground"
+              onClick={handleShare}
+            >
+              <Share2 className="h-4 w-4" />
+              <span>{likeInfo?.shareCount ?? 0}</span>
+            </button>
+          </div>
+
+          {/* 댓글 섹션 */}
+          <div className="mt-8">
+            <AppCommentSection topicId={topicId} topicAuthorId={topic?.author} />
+          </div>
         </div>
 
         <AuthorProfileCard authorInfo={authorInfo} />
