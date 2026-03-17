@@ -30,3 +30,12 @@ export const useAuthStore = create<AuthStore>()(
     { name: "auth-storage", partialize: (state) => ({ user: state.user }) },
   ),
 );
+interface SearchStore {
+  searchOpen: boolean;
+  setSearchOpen: (v: boolean) => void;
+}
+
+export const useSearchStore = create<SearchStore>()((set) => ({
+  searchOpen: false,
+  setSearchOpen: (v) => set({ searchOpen: v }),
+}));

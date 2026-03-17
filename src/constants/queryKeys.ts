@@ -14,6 +14,7 @@ export const topicKeys = createQueryKeys("topic", {
   communityList: (category?: string) => [category ?? ""],
   draftList: (userId: string) => [userId],
   detail: (id: string | number) => [String(id)],
+  searchList: (query: string, category?: string) => [query, category ?? ""],
 });
 
 export const userKeys = createQueryKeys("user", {

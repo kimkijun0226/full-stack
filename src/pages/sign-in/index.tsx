@@ -51,7 +51,7 @@ export default function SignIn() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-2 text-muted-foreground bg-black uppercase">OR CONTINUE WITH</span>
+              <span className="px-2 text-muted-foreground bg-background uppercase">OR CONTINUE WITH</span>
             </div>
           </div>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

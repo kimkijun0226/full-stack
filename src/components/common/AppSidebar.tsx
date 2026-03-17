@@ -31,7 +31,7 @@ function AppSidebar() {
           return (
             <Button
               variant="ghost"
-              className={`justify-start text-muted-foreground hover:text-white hover:pl-6 transition-all duration-500 ${isActive ? "bg-muted text-white pl-6" : ""}`}
+              className={`justify-start text-muted-foreground hover:text-foreground hover:pl-6 transition-all duration-500 ${isActive ? "bg-muted text-foreground pl-6" : ""}`}
               key={menu.id}
               asChild
             >

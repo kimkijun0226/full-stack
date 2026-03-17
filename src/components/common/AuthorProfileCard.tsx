@@ -28,15 +28,15 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
 
   return (
     <aside className="w-full lg:sticky lg:top-[68px] lg:w-52 lg:shrink-0">
-      <Card className="rounded-2xl border-white/10 bg-[#121212] py-0">
+      <Card className="rounded-2xl border-border bg-card py-0">
         <CardContent className="p-4">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-1.5">
                 <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
-                <h3 className="truncate text-sm font-semibold text-white">{authorInfo?.nickname || "작성자"}</h3>
+                <h3 className="truncate text-sm font-semibold text-foreground">{authorInfo?.nickname || "작성자"}</h3>
               </div>
-              <p className="text-xs text-white/50">팔로우 {followerCount} 명</p>
+              <p className="text-xs text-muted-foreground">팔로우 {followerCount} 명</p>
             </div>
 
             {hasProfileImage ? (
@@ -47,13 +47,13 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
                 onError={() => setIsImageError(true)}
               />
             ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/8 text-xs text-white/50">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground/8 text-xs text-muted-foreground">
                 {authorInfo?.nickname?.charAt(0) || "작"}
               </div>
             )}
           </div>
 
-          <Separator className="my-4 bg-white/10" />
+          <Separator className="my-4" />
 
           <div className="flex flex-col gap-2">
             <Button
@@ -63,8 +63,8 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
               className={cn(
                 "w-full rounded-xl text-xs font-medium transition",
                 isFollowing
-                  ? "bg-red-500/15 text-red-400 hover:bg-red-500/25"
-                  : "bg-white/6 text-white hover:bg-white/10",
+                  ? "bg-red-500/15 text-red-500 dark:text-red-400 hover:bg-red-500/25"
+                  : "bg-foreground/6 text-foreground hover:bg-foreground/10",
               )}
               onClick={toggleFollow}
               disabled={isLoading || user?.id === authorInfo?.id}
@@ -77,7 +77,7 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
               type="button"
               variant="secondary"
               size="sm"
-              className="w-full rounded-xl bg-white/6 text-xs font-medium text-white hover:bg-white/10"
+              className="w-full rounded-xl bg-foreground/6 text-xs font-medium text-foreground hover:bg-foreground/10"
               onClick={handleDm}
               disabled={getOrCreate.isPending || user?.id === authorInfo?.id}
             >

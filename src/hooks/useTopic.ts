@@ -29,6 +29,15 @@ export function useCommunityTopics(category?: string) {
   });
 }
 
+/** 제목 / 닉네임 / 이메일 검색 */
+export function useSearchTopics(query: string, category?: string) {
+  return useQuery({
+    queryKey: topicKeys.searchList(query, category ?? "").queryKey,
+    queryFn: () => topicApi.searchTopics(query, category || undefined),
+    enabled: query.trim().length > 0,
+  });
+}
+
 export function useTopic(category?: string) {
   const client = useQueryClient();
   const { user } = useAuthStore();

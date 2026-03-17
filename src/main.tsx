@@ -1,8 +1,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider.tsx";
+import { useEffect } from "react";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 import RootLayout from "./layout.tsx"; // 전역 레이아웃
 import App from "./pages"; // 앱 컴포넌트
@@ -13,6 +22,7 @@ import CreateTopic from "./pages/topics/[topic_id]/create.tsx"; // 토픽 작성
 import UpdateTopic from "./pages/topics/[topic_id]/update.tsx";
 import { TopicDetail } from "./pages/topics/[topic_id]/detail.tsx";
 import DmPage from "./pages/dm/index.tsx";
+import ProfilePage from "./pages/profile/index.tsx";
 import { queryClient } from "./lib/queryClient";
 import "./index.css";
 import { Toaster } from "./components/ui";
@@ -22,6 +32,7 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             <Route element={<RootLayout />}>
               <Route index element={<App />} />
@@ -32,6 +43,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="topics/:id/update" element={<UpdateTopic />} />
               <Route path="topics/:id/detail" element={<TopicDetail />} />
               <Route path="dm" element={<DmPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
           </Routes>
         </BrowserRouter>

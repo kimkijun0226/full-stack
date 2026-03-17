@@ -129,6 +129,36 @@ async function deleteTopic(id: number): Promise<void> {
   if (error) throw error;
 }
 
+/** 제목 / 닉네임 / 이메일로 검색 (PUBLIC 발행 글만) */
+async function searchTopics(query: string, category?: string): Promise<Topic[]> {
+  const { data: matchedUsers } = await supabase
+    .from("user")
+    .select("id")
+    .or(`nickname.ilike.%${query}%,email.ilike.%${query}%`);
+
+  const authorIds = (matchedUsers ?? []).map((u: { id: string }) => u.id);
+
+  let q = supabase
+    .from("topic")
+    .select("*")
+    .eq("status", TOPIC_STATUS.PUBLISH)
+    .order("created_at", { ascending: false });
+
+  if (authorIds.length > 0) {
+    q = q.or(`title.ilike.%${query}%,author.in.(${authorIds.join(",")})`);
+  } else {
+    q = q.ilike("title", `%${query}%`);
+  }
+
+  if (category && category.trim() !== "") {
+    q = q.eq("category", category);
+  }
+
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []).map(normalizeTopic).filter((t) => t.visibility === "PUBLIC");
+}
+
 export const topicApi = {
   getPublishedTopics,
   getMyPublishedTopics,
@@ -139,4 +169,5 @@ export const topicApi = {
   create,
   update,
   deleteTopic,
+  searchTopics,
 };

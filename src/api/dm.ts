@@ -10,6 +10,7 @@ export type DmRoom = {
     id: string;
     nickname: string;
     profile_image: string | null;
+    email?: string;
   };
   last_message?: string | null;
   unread_count?: number;
@@ -33,8 +34,8 @@ const getRooms = async (myId: string): Promise<DmRoom[]> => {
     .select(
       `
       id, user1_id, user2_id, created_at,
-      user1:user!dm_room_user1_id_fkey(id, nickname, profile_image),
-      user2:user!dm_room_user2_id_fkey(id, nickname, profile_image)
+      user1:user!dm_room_user1_id_fkey(id, nickname, profile_image, email),
+      user2:user!dm_room_user2_id_fkey(id, nickname, profile_image, email)
     `,
     )
     .or(`user1_id.eq.${myId},user2_id.eq.${myId}`)
@@ -48,8 +49,8 @@ const getRooms = async (myId: string): Promise<DmRoom[]> => {
       user1_id: string;
       user2_id: string;
       created_at: string;
-      user1: { id: string; nickname: string; profile_image: string | null };
-      user2: { id: string; nickname: string; profile_image: string | null };
+      user1: { id: string; nickname: string; profile_image: string | null; email?: string };
+      user2: { id: string; nickname: string; profile_image: string | null; email?: string };
     };
     const other = r.user1_id === myId ? r.user2 : r.user1;
     return {
