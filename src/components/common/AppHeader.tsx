@@ -48,8 +48,8 @@ function AppHeader() {
         navigate({ pathname: "/", search: `?${params}` }, { replace: true });
       }
     }
-  // isCommunityView 의존성 제거 → 토글 클릭 후 루프 방지
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // isCommunityView 의존성 제거 → 토글 클릭 후 루프 방지
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, searchParams, user?.id]);
 
   const isOnDm = location.pathname === "/dm";
@@ -125,7 +125,12 @@ function AppHeader() {
           <button
             type="button"
             className="inline-flex cursor-pointer items-center gap-2.5 group"
-            onClick={() => navigate({ pathname: "/", search: isCommunityView ? "?view=community" : (user?.id ? "" : "?view=community") })}
+            onClick={() =>
+              navigate({
+                pathname: "/",
+                search: isCommunityView ? "?view=community" : user?.id ? "" : "?view=community",
+              })
+            }
           >
             <img src="/assets/my-page-icon.png" alt="@logo" className="h-8 w-8 sm:h-8 sm:w-8 drop-shadow-sm" />
             <span className="relative hidden sm:inline-block overflow-hidden h-7 sm:h-8">
@@ -313,7 +318,9 @@ function AppHeader() {
                 ) : (
                   <CircleUser className="h-8 w-8 text-foreground/60" />
                 )}
-                <span className="hidden sm:block max-w-[132px] truncate text-sm">{userInfo?.nickname || user.email}</span>
+                <span className="hidden sm:block max-w-[132px] truncate text-sm">
+                  {userInfo?.nickname || user.email}
+                </span>
               </button>
             ) : (
               <NavLink

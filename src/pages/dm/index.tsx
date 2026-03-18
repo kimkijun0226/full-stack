@@ -422,7 +422,11 @@ export default function DmPage() {
                       )}
                     >
                       {other?.profile_image ? (
-                        <img src={other.profile_image} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                        <img
+                          src={other.profile_image}
+                          alt=""
+                          className="h-10 w-10 shrink-0 rounded-full object-cover"
+                        />
                       ) : (
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/8 dark:bg-white/10 text-xs text-foreground/60 dark:text-white/60">
                           {other?.nickname?.charAt(0) ?? "?"}
@@ -449,8 +453,8 @@ export default function DmPage() {
                             {room.last_message_type === "image"
                               ? "🖼️ 사진"
                               : room.last_message_type === "file"
-                              ? "📎 파일"
-                              : (room.last_message_content ?? "")}
+                                ? "📎 파일"
+                                : (room.last_message_content ?? "")}
                           </p>
                           {!!room.unread_count && room.unread_count > 0 && (
                             <span className="shrink-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
