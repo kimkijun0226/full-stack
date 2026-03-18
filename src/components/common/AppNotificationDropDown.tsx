@@ -11,6 +11,15 @@ import type { NotificationType } from "@/api";
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
 
+const typeLabel: Record<NotificationType, string> = {
+  follow: "팔로우",
+  new_post: "새 글",
+  comment: "댓글",
+  reply: "답글",
+  topic_like: "좀아요",
+  comment_like: "댓글 좀아요",
+};
+
 export function AppNotificationDropdown() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -28,6 +37,15 @@ export function AppNotificationDropdown() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleOpen = () => {
+    const next = !isOpen;
+    setIsOpen(next);
+    // 열릴 때 읽지 않은 알림 전체 읽음 처리
+    if (next && unreadCount > 0) {
+      markAllAsRead.mutate();
+    }
+  };
+
   const handleNotificationClick = (id: string, link: string) => {
     markAsRead.mutate(id);
     setIsOpen(false);
@@ -39,13 +57,13 @@ export function AppNotificationDropdown() {
       {/* 벨 아이콘 */}
       <button
         type="button"
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/8 text-white/70 transition hover:border-white/35 hover:bg-white/12 hover:text-white"
-        onClick={() => setIsOpen((prev) => !prev)}
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/30 bg-white shadow-sm shadow-primary/10 text-primary/70 transition hover:border-primary/50 hover:bg-primary/10 hover:text-primary dark:border-border dark:bg-foreground/5 dark:shadow-none dark:text-foreground/60 dark:hover:bg-foreground/10 dark:hover:text-foreground"
+        onClick={handleOpen}
       >
         <Bell className="h-4 w-4" />
         {/* 읽지 않은 알림 뱃지 */}
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -55,17 +73,8 @@ export function AppNotificationDropdown() {
       {isOpen && (
         <div className="absolute right-0 top-11 z-50 w-80 rounded-xl border border-border bg-card shadow-2xl">
           {/* 헤더 */}
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center border-b border-border px-4 py-3">
             <span className="text-sm font-semibold text-foreground">알림</span>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                className="text-xs text-foreground/50 transition hover:text-foreground"
-                onClick={() => markAllAsRead.mutate()}
-              >
-                모두 읽음
-              </button>
-            )}
           </div>
 
           {/* 알림 목록 */}
@@ -86,13 +95,6 @@ export function AppNotificationDropdown() {
                   )}
                   onClick={() => handleNotificationClick(notification.id, notification.link)}
                 >
-                  {/* 읽음 여부 표시 */}
-                  <span
-                    className={cn(
-                      "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                      notification.is_read ? "bg-transparent" : "bg-blue-400",
-                    )}
-                  />
                   {/* 타입별 아이콘 */}
                   {!notification.thumbnail && <NotificationIcon type={notification.type} />}
                   {notification.thumbnail && (
@@ -103,7 +105,10 @@ export function AppNotificationDropdown() {
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="whitespace-pre-line text-sm text-foreground/90">{notification.content}</p>
+                    <p className="text-[11px] font-semibold text-primary mb-0.5">{typeLabel[notification.type]}</p>
+                    <p className="text-sm text-foreground/90 line-clamp-3 whitespace-pre-line leading-snug">
+                      {notification.content}
+                    </p>
                     <p className="mt-0.5 text-xs text-foreground/40">{dayjs(notification.created_at).fromNow()}</p>
                   </div>
                 </button>

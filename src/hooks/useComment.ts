@@ -13,7 +13,7 @@ export function useComments(topicId: number) {
   });
 }
 
-export function useCreateComment(topicId: number, topicAuthorId?: string) {
+export function useCreateComment(topicId: number, topicAuthorId?: string, topicTitle?: string) {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
@@ -26,13 +26,23 @@ export function useCreateComment(topicId: number, topicAuthorId?: string) {
       if (!user || !topicAuthorId) return;
 
       const notifType = variables.parent_id ? "reply" : "comment";
+      const titlePreview = topicTitle
+        ? `"${topicTitle.length > 20 ? topicTitle.slice(0, 20) + "…" : topicTitle}"`
+        : null;
+      const commentPreview = variables.content.length > 30 ? variables.content.slice(0, 30) + "…" : variables.content;
+      const content = [
+        titlePreview
+          ? `${titlePreview} 글에 ${notifType === "reply" ? "답글" : "댓글"}을 남겼습니다.`
+          : `${notifType === "reply" ? "답글" : "댓글"}을 남겼습니다.`,
+        `"${commentPreview}"`,
+      ].join("\n");
 
       try {
         await notificationApi.createNotification({
           receiver_id: topicAuthorId,
           sender_id: user.id,
           type: notifType,
-          content: variables.content.slice(0, 80),
+          content,
           link: `/topics/${topicId}/detail`,
         });
       } catch {
@@ -61,10 +71,12 @@ export function useToggleCommentLike(topicId: number) {
       commentId,
       isLiked,
       commentAuthorId,
+      commentContent,
     }: {
       commentId: number;
       isLiked: boolean;
       commentAuthorId?: string;
+      commentContent?: string;
     }) => {
       if (!user) throw new Error("로그인이 필요합니다.");
       if (isLiked) {
@@ -72,11 +84,14 @@ export function useToggleCommentLike(topicId: number) {
       } else {
         await commentApi.likeComment(commentId, user.id);
         if (commentAuthorId) {
+          const preview = commentContent
+            ? `"${commentContent.length > 30 ? commentContent.slice(0, 30) + "…" : commentContent}"`
+            : null;
           await notificationApi.createNotification({
             receiver_id: commentAuthorId,
             sender_id: user.id,
             type: "comment_like",
-            content: "회원님의 댓글을 좋아합니다.",
+            content: preview ? `${preview} 댓글에 좋아요를 눌렀습니다.` : "회원님의 댓글을 좋아합니다.",
             link: `/topics/${topicId}/detail`,
           });
         }

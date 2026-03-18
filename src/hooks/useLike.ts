@@ -13,7 +13,7 @@ export function useTopicLike(topicId: number) {
   });
 }
 
-export function useToggleTopicLike(topicId: number, topicAuthorId?: string) {
+export function useToggleTopicLike(topicId: number, topicAuthorId?: string, topicTitle?: string) {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
@@ -25,11 +25,14 @@ export function useToggleTopicLike(topicId: number, topicAuthorId?: string) {
       } else {
         await likeApi.likeTopic(topicId, user.id);
         if (topicAuthorId) {
+          const titlePreview = topicTitle
+            ? `"${topicTitle.length > 24 ? topicTitle.slice(0, 24) + "…" : topicTitle}"`
+            : null;
           await notificationApi.createNotification({
             receiver_id: topicAuthorId,
             sender_id: user.id,
             type: "topic_like",
-            content: "회원님의 글을 좋아합니다.",
+            content: titlePreview ? `${titlePreview} 글에 좋아요를 눌렀습니다.` : "회원님의 글을 좋아합니다.",
             link: `/topics/${topicId}/detail`,
           });
         }
