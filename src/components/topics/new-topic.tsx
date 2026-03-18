@@ -1,10 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Card, Separator } from "../ui";
-import { CaseSensitive } from "lucide-react";
+import { Eye, Heart, Share2 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/ko";
 import type { Topic } from "@/types";
+import { useShareTopic, useToggleTopicLike, useTopicLike, useUserInfo } from "@/hooks";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores";
 
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
@@ -56,32 +59,87 @@ function formatCreatedAt(createdAt: string) {
 
 export function NewTopicCard({ props }: Props) {
   const navigate = useNavigate();
+  const { userInfo: authorInfo } = useUserInfo(props?.author);
+  const { data } = useTopicLike(props.id);
+  const { user } = useAuthStore();
+  const toggleLike = useToggleTopicLike(props.id, props?.author, props.title);
+  const shareTopic = useShareTopic(props.id);
+
+  const handleLike = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      return;
+    }
+    toggleLike.mutate(data?.isLiked ?? false);
+  };
+
+  const handleShare = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    shareTopic.mutate(window.location.href, {
+      onSuccess: () => toast.success("링크가 복사되었습니다!"),
+    });
+  };
+
+  const isPublic = props.visibility === "PUBLIC";
 
   return (
     <Card
-      className="w-full h-fit p-4 gap-4 cursor-pointer hover:scale-102 transition-transform duration-200 ease-out"
+      className={`w-full h-fit p-4 gap-4 cursor-pointer hover:scale-102 transition-all duration-200 ease-out bg-white ${
+        isPublic
+          ? "border border-[#4472e3]/40 shadow-[0_2px_10px_rgba(68,114,227,0.30)] hover:shadow-[0_3px_14px_rgba(68,114,227,0.48)]"
+          : "border border-[#7c79c7]/30 shadow-[0_2px_10px_rgba(124,121,199,0.24)] hover:shadow-[0_3px_14px_rgba(124,121,199,0.40)]"
+      }`}
       onClick={() => navigate(`/topics/${props.id}/detail`)}
     >
       <div className="flex items-start gap-4">
         <div className="flex-1 flex flex-col items-start gap-4">
-          {/* 썸네일과 제목 */}
-          <h3 className="h-16 text-base font-semibold tracking-tight line-clamp-2">
-            <CaseSensitive size={16} className="text-muted-foreground" />
+          {/* 제목 */}
+          <h3 className="h-12 text-base font-semibold tracking-tight line-clamp-2">
             <p>{props.title}</p>
           </h3>
           {/* 본문 */}
-          <p className="line-clamp-3 text-muted-foreground">{extractTextFromContent(props.content)}</p>
+          <p className="line-clamp-3 text-muted-foreground text-sm">{extractTextFromContent(props.content)}</p>
         </div>
         <img
           src={props.thumbnail || ""}
           alt="@THUMBNAIL"
-          className="w-[140px] h-[140px] aspect-square rounded-lg object-cover"
+          className="w-[130px] h-[130px] aspect-square rounded-lg object-cover"
         />
       </div>
       <Separator />
-      <div className="w-full flex items-center justify-between">
-        <p>닉네임: 123</p>
-        <p>{formatCreatedAt(props.created_at)}</p>
+      <div className="w-full flex justify-between items-center text-xs text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <img
+            src={authorInfo?.profile_image || undefined}
+            alt="author profile"
+            className="w-5 h-5 rounded-full object-cover shrink-0"
+          />
+          <p className="text-xs truncate min-w-0">{authorInfo?.nickname}</p>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Eye size={12} />
+            <span className="text-xs">{props.view_count ?? 0}</span>
+          </div>
+          <button
+            type="button"
+            className="flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform duration-200 ease-out"
+            onClick={(e) => handleLike(e)}
+          >
+            <Heart size={13} className={`text-rose-400 ${data?.isLiked ? "fill-rose-400" : ""}`} />
+            <span className="text-xs">{data?.count || 0}</span>
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-1 cursor-pointer hover:scale-110 transition-transform duration-200 ease-out"
+            onClick={(e) => handleShare(e)}
+          >
+            <Share2 size={13} className="text-muted-foreground" />
+            <span className="text-xs">{props.share_count || 0}</span>
+          </button>
+          <span className="text-xs ml-auto">{formatCreatedAt(props.created_at)}</span>
+        </div>
       </div>
     </Card>
   );
