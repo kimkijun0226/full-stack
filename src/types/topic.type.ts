@@ -18,4 +18,5 @@ export interface Topic {
   /** 없으면 기존 데이터 호환용 public */
   visibility?: TOPIC_VISIBILITY;
   share_count?: number;
+  view_count?: number;
 }

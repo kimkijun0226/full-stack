@@ -124,6 +124,10 @@ async function update(id: string | number, payload: TopicUpdatePayload): Promise
   return normalizeTopic(data);
 }
 
+async function incrementViewCount(id: string | number): Promise<void> {
+  await supabase.rpc("increment_view_count", { topic_id: id });
+}
+
 async function deleteTopic(id: number): Promise<void> {
   const { error } = await supabase.from("topic").delete().eq("id", id).select().single();
   if (error) throw error;
@@ -169,5 +173,6 @@ export const topicApi = {
   create,
   update,
   deleteTopic,
+  incrementViewCount,
   searchTopics,
 };
