@@ -27,7 +27,7 @@ function AuthorProfileCard({ authorInfo }: AuthorProfileCardProps) {
   };
 
   return (
-    <aside className="w-full lg:sticky lg:top-[68px] lg:w-52 lg:shrink-0">
+    <aside className="w-full lg:sticky lg:top-[80px] lg:w-52 lg:shrink-0">
       <Card className="rounded-2xl border-border bg-card py-0">
         <CardContent className="p-4">
           <div className="flex items-center justify-between gap-2">

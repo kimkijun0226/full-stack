@@ -2,7 +2,7 @@ import { Button, Separator } from "../ui";
 
 function AppFooter() {
   return (
-    <footer className="w-full flex flex-col items-center justify-center bg-[#121212]">
+    <footer className="w-full flex flex-col items-center justify-center bg-[#121212] text-white">
       <div className="w-full max-w-[1328px] flex flex-col gap-6 p-6 pb-18">
         <div className="w-full flex flex-col items-start justify-between gap-6 md:flex-row md:gap-0">
           <div className="flex flex-col items-start gap-4">

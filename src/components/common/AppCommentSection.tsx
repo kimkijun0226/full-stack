@@ -1,9 +1,17 @@
 import { useState } from "react";
 import { useAuthStore } from "@/stores";
-import { useComments, useCreateComment, useDeleteComment, useToggleCommentLike } from "@/hooks";
+import {
+  useComments,
+  useCreateComment,
+  useDeleteComment,
+  useShareTopic,
+  useToggleCommentLike,
+  useToggleTopicLike,
+  useTopicLike,
+} from "@/hooks";
 import type { Comment } from "@/api/comment";
 import { Button } from "@/components/ui";
-import { Heart, MessageCircle, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -16,14 +24,15 @@ dayjs.locale("ko");
 interface AppCommentSectionProps {
   topicId: number;
   topicAuthorId?: string;
+  topicTitle?: string;
 }
 
-export function AppCommentSection({ topicId, topicAuthorId }: AppCommentSectionProps) {
+export function AppCommentSection({ topicId, topicAuthorId, topicTitle }: AppCommentSectionProps) {
   const { user } = useAuthStore();
   const { data: comments = [], isLoading } = useComments(topicId);
-  const createComment = useCreateComment(topicId, topicAuthorId);
+  const createComment = useCreateComment(topicId, topicAuthorId, topicTitle);
   const deleteComment = useDeleteComment(topicId);
-  const toggleLike = useToggleCommentLike(topicId);
+  const toggleCommentLike = useToggleCommentLike(topicId);
 
   const [newComment, setNewComment] = useState("");
   const [replyTargetId, setReplyTargetId] = useState<number | null>(null);
@@ -31,6 +40,24 @@ export function AppCommentSection({ topicId, topicAuthorId }: AppCommentSectionP
 
   const topLevel = comments.filter((c) => c.parent_id === null);
   const getReplies = (parentId: number) => comments.filter((c) => c.parent_id === parentId);
+
+  const { data: likeInfo } = useTopicLike(topicId);
+  const toggleLike = useToggleTopicLike(topicId, topicAuthorId, topicTitle);
+  const shareTopic = useShareTopic(topicId);
+
+  const handleLike = () => {
+    if (!user) {
+      toast.error("로그인이 필요합니다.");
+      return;
+    }
+    toggleLike.mutate(likeInfo?.isLiked ?? false);
+  };
+
+  const handleShare = () => {
+    shareTopic.mutate(window.location.href, {
+      onSuccess: () => toast.success("링크가 복사되었습니다!"),
+    });
+  };
 
   const handleSubmit = () => {
     const trimmed = newComment.trim();
@@ -73,23 +100,51 @@ export function AppCommentSection({ topicId, topicAuthorId }: AppCommentSectionP
     });
   };
 
-  const handleLike = (comment: Comment) => {
+  const handleCommentLike = (comment: Comment) => {
     if (!user) {
       toast.error("로그인이 필요합니다.");
       return;
     }
-    toggleLike.mutate({
+    toggleCommentLike.mutate({
       commentId: comment.id,
       isLiked: comment.is_liked,
       commentAuthorId: comment.author?.id,
+      commentContent: comment.content,
     });
   };
 
   return (
-    <div className="w-full">
-      <h3 className="mb-4 text-base font-semibold text-foreground">
-        댓글 <span className="text-foreground/40">{comments.length}</span>
-      </h3>
+    <div className="w-full flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-foreground">
+          댓글 <span className="text-foreground/40">{comments.length}</span>
+        </h3>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={cn(
+              "flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition",
+              likeInfo?.isLiked
+                ? "border-rose-500/40 bg-rose-500/10 text-rose-500"
+                : "border-border text-foreground/60 hover:border-rose-400/40 hover:bg-rose-500/5 hover:text-rose-500",
+            )}
+            onClick={handleLike}
+          >
+            <Heart className={cn("h-4 w-4", likeInfo?.isLiked && "fill-rose-500")} />
+            <span>{likeInfo?.count ?? 0}</span>
+          </button>
+
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-sm font-medium text-foreground/60 transition hover:border-foreground/30 hover:text-foreground"
+            onClick={handleShare}
+          >
+            <Share2 className="h-4 w-4" />
+            <span>{likeInfo?.shareCount ?? 0}</span>
+          </button>
+        </div>
+      </div>
 
       {/* 댓글 입력 */}
       <CommentInput
@@ -102,17 +157,17 @@ export function AppCommentSection({ topicId, topicAuthorId }: AppCommentSectionP
       />
 
       {/* 댓글 목록 */}
-      <div className="mt-6 flex flex-col gap-0">
+      <div className="flex flex-col gap-0">
         {isLoading && <p className="py-6 text-center text-sm text-foreground/40">댓글을 불러오는 중...</p>}
         {!isLoading && topLevel.length === 0 && (
           <p className="py-6 text-center text-sm text-foreground/40">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
         )}
         {topLevel.map((comment) => (
-          <div key={comment.id} className="border-b border-border last:border-0">
+          <div key={comment.id} className="">
             <CommentItem
               comment={comment}
               currentUserId={user?.id}
-              onLike={() => handleLike(comment)}
+              onLike={() => handleCommentLike(comment)}
               onDelete={() => handleDelete(comment.id)}
               onReply={() => setReplyTargetId(replyTargetId === comment.id ? null : comment.id)}
             />
@@ -123,7 +178,7 @@ export function AppCommentSection({ topicId, topicAuthorId }: AppCommentSectionP
                 <CommentItem
                   comment={reply}
                   currentUserId={user?.id}
-                  onLike={() => handleLike(reply)}
+                  onLike={() => handleCommentLike(reply)}
                   onDelete={() => handleDelete(reply.id)}
                   isReply
                 />
@@ -166,12 +221,12 @@ interface CommentInputProps {
   userAvatar?: string;
 }
 
-function CommentInput({ value, onChange, onSubmit, onCancel, isLoading, placeholder, autoFocus }: CommentInputProps) {
+function CommentInput({ value, onChange, onSubmit, isLoading, placeholder, autoFocus }: CommentInputProps) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="relative">
       <textarea
-        className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-1 focus:ring-ring"
-        rows={2}
+        className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 pb-10 text-sm text-foreground placeholder:text-foreground/30 focus:outline-none focus:ring-1 focus:ring-ring"
+        rows={4}
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -180,16 +235,14 @@ function CommentInput({ value, onChange, onSubmit, onCancel, isLoading, placehol
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) onSubmit();
         }}
       />
-      <div className="flex items-center justify-end gap-2">
-        {onCancel && (
-          <Button size="sm" variant="ghost" onClick={onCancel} disabled={isLoading}>
-            취소
+
+      {value.trim() && (
+        <div className="absolute bottom-2 right-2">
+          <Button size="sm" onClick={onSubmit} disabled={!value.trim() || isLoading}>
+            {isLoading ? "등록 중..." : "등록"}
           </Button>
-        )}
-        <Button size="sm" onClick={onSubmit} disabled={!value.trim() || isLoading}>
-          {isLoading ? "등록 중..." : "등록"}
-        </Button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
