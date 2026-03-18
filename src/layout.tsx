@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { AppFooter, AppHeader } from "./components/common";
+import { AppHeader } from "./components/common";
 import useAuthListener from "./hooks/useAuthListener";
 
 export default function RootLayout() {
@@ -7,10 +7,10 @@ export default function RootLayout() {
   return (
     <div className="page">
       <AppHeader />
-      <div className="container">
+      <div className="app-layout">
         <Outlet />
       </div>
-      <AppFooter />
+      {/* <AppFooter /> */}
     </div>
   );
 }

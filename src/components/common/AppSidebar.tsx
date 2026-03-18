@@ -1,7 +1,5 @@
 import { CLASS_CATEGORY } from "@/constants/category.constant";
-import { ChevronDown } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Button } from "../ui";
 
 function AppSidebar() {
   const [searchParams] = useSearchParams();
@@ -18,32 +16,28 @@ function AppSidebar() {
   };
 
   return (
-    <aside className="min-w-60 w-60 flex flex-col gap-6">
-      <div className="flex items-center gap-2">
-        <h4 className="scroll-m-20 text-xl font-semibold tracking-tight">카테고리</h4>
-        <ChevronDown className="mt-1" />
-      </div>
-      <div className="w-full flex flex-col gap-2">
-        {CLASS_CATEGORY.map((menu) => {
-          const isActive = currentCategory === menu.category;
-          const to = { pathname: "/", search: makeSearch(menu.category) };
+    <div className="w-full flex flex-col gap-1">
+      <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground/60 tracking-wider uppercase">카테고리</p>
+      {CLASS_CATEGORY.map((menu) => {
+        const isActive = currentCategory === menu.category;
+        const to = { pathname: "/", search: makeSearch(menu.category) };
 
-          return (
-            <Button
-              variant="ghost"
-              className={`justify-start text-muted-foreground hover:text-foreground hover:pl-6 transition-all duration-500 ${isActive ? "bg-muted text-foreground pl-6" : ""}`}
-              key={menu.id}
-              asChild
-            >
-              <Link to={to}>
-                {menu.icon}
-                {menu.label}
-              </Link>
-            </Button>
-          );
-        })}
-      </div>
-    </aside>
+        return (
+          <Link
+            key={menu.id}
+            to={to}
+            className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors duration-150 [&>svg]:size-[18px] [&>svg]:shrink-0 ${
+              isActive
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-foreground/70 hover:bg-foreground/6 hover:text-foreground"
+            }`}
+          >
+            {menu.icon}
+            <span className="truncate">{menu.label}</span>
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 
