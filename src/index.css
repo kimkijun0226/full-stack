@@ -49,22 +49,22 @@
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
+  --card: oklch(0.98 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --primary: #7c79c7;
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.96 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.94 0.012 280);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.9 0 0);
+  --ring: #7c79c7;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -133,23 +133,37 @@
 }
 
 .page {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
 
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
 
-  margin: auto;
-
-  .container {
+  .app-layout {
     width: 100%;
-    max-width: 1328px;
     padding-top: 60px;
     flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 }
 
 .bn-editor {
   background-color: transparent !important;
+}
+
+/* 커뮤니티 뷰 - 파란색 테마 */
+:root.community {
+  --primary: #4472e3;
+  --ring: #4472e3;
+  --accent: oklch(0.94 0.025 240);
+}
+
+/* BlockNote 라이트 모드 텍스트 색상 강제 적용 */
+:root .bn-editor,
+:root .bn-block-content,
+:root .bn-inline-content {
+  --bn-colors-editor-text: oklch(0.145 0 0) !important;
+  color: oklch(0.145 0 0) !important;
 }
