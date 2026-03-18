@@ -136,13 +136,21 @@ export function TopicDetail() {
             {topic?.content && <AppEditor content={JSON.parse(topic?.content ?? "")} readonly />}
           </div>
 
+          {/* 작성자 카드 - 모바일에서만 에디터 바로 아래 표시 */}
+          <div className="mt-16 mb-4 lg:hidden">
+            <AuthorProfileCard authorInfo={authorInfo} />
+          </div>
+
           {/* 댓글 섹션 */}
-          <div className="mt-8">
+          <div className="mt-6 lg:mt-8">
             <AppCommentSection topicId={topicId} topicAuthorId={topic?.author} topicTitle={topic?.title} />
           </div>
         </div>
 
-        <AuthorProfileCard authorInfo={authorInfo} />
+        {/* 작성자 카드 - 데스크탑에서만 우측 표시 */}
+        <div className="hidden lg:block">
+          <AuthorProfileCard authorInfo={authorInfo} />
+        </div>
       </div>
     </main>
   );

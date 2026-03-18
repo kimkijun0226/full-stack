@@ -161,9 +161,17 @@
 }
 
 /* BlockNote 라이트 모드 텍스트 색상 강제 적용 */
-:root .bn-editor,
-:root .bn-block-content,
-:root .bn-inline-content {
+:root:not(.dark) .bn-editor,
+:root:not(.dark) .bn-block-content,
+:root:not(.dark) .bn-inline-content {
   --bn-colors-editor-text: oklch(0.145 0 0) !important;
   color: oklch(0.145 0 0) !important;
+}
+
+/* BlockNote 다크 모드 텍스트 색상 강제 적용 */
+.dark .bn-editor,
+.dark .bn-block-content,
+.dark .bn-inline-content {
+  --bn-colors-editor-text: oklch(0.985 0 0) !important;
+  color: oklch(0.985 0 0) !important;
 }

@@ -37,10 +37,20 @@ function AppHeader() {
       setIsCommunityView(true);
     } else if (searchParams.has("view") && urlView !== "community") {
       setIsCommunityView(false);
-    } else if (!searchParams.has("view") && !user?.id) {
-      setIsCommunityView(true);
+    } else if (!searchParams.has("view")) {
+      if (!user?.id) {
+        setIsCommunityView(true);
+      } else if (isCommunityView) {
+        // 커뮤니티 뷰인데 URL에 view 파라미터 없으면 복원
+        const params = new URLSearchParams();
+        params.set("view", "community");
+        if (category) params.set("category", category);
+        navigate({ pathname: "/", search: `?${params}` }, { replace: true });
+      }
     }
-  }, [location.pathname, searchParams, user?.id, setIsCommunityView]);
+  // isCommunityView 의존성 제거 → 토글 클릭 후 루프 방지
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, searchParams, user?.id]);
 
   const isOnDm = location.pathname === "/dm";
 
@@ -115,10 +125,10 @@ function AppHeader() {
           <button
             type="button"
             className="inline-flex cursor-pointer items-center gap-2.5 group"
-            onClick={() => navigate({ pathname: "/", search: user?.id ? "" : "?view=community" })}
+            onClick={() => navigate({ pathname: "/", search: isCommunityView ? "?view=community" : (user?.id ? "" : "?view=community") })}
           >
             <img src="/assets/my-page-icon.png" alt="@logo" className="h-8 w-8 sm:h-8 sm:w-8 drop-shadow-sm" />
-            <span className="relative inline-block overflow-hidden h-7 sm:h-8">
+            <span className="relative hidden sm:inline-block overflow-hidden h-7 sm:h-8">
               {/* My Page */}
               <span
                 className={`text-[20px] sm:text-[22px] font-bold tracking-tight transition-all duration-500 ease-in-out absolute inset-0 flex items-center whitespace-nowrap ${
@@ -264,7 +274,7 @@ function AppHeader() {
               >
                 <MessageCircle className="h-4 w-4" />
                 {dmUnreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
                     {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
                   </span>
                 )}
@@ -295,7 +305,7 @@ function AppHeader() {
             {user?.id ? (
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white shadow-sm shadow-primary/10 dark:border-border dark:bg-foreground/5 dark:shadow-none px-2.5 py-1 text-foreground/90 transition hover:border-primary/40 hover:bg-primary/8 dark:hover:bg-foreground/10"
+                className="inline-flex items-center rounded-full border border-primary/25 bg-white shadow-sm shadow-primary/10 dark:border-border dark:bg-foreground/5 dark:shadow-none p-1 sm:gap-2 sm:px-2.5 sm:py-1 text-foreground/90 transition hover:border-primary/40 hover:bg-primary/8 dark:hover:bg-foreground/10"
                 onClick={() => setMenuOpen(true)}
               >
                 {userInfo?.profile_image ? (
@@ -303,7 +313,7 @@ function AppHeader() {
                 ) : (
                   <CircleUser className="h-8 w-8 text-foreground/60" />
                 )}
-                <span className="max-w-[132px] truncate text-sm">{userInfo?.nickname || user.email}</span>
+                <span className="hidden sm:block max-w-[132px] truncate text-sm">{userInfo?.nickname || user.email}</span>
               </button>
             ) : (
               <NavLink
@@ -323,6 +333,24 @@ function AppHeader() {
         onOpenChange={setMenuOpen}
         user={user}
         userInfo={userInfo}
+        isCommunityView={isCommunityView}
+        dmUnreadCount={dmUnreadCount}
+        onToggleCommunityView={() => {
+          const next = !isCommunityView;
+          setIsCommunityView(next);
+          const params = new URLSearchParams();
+          if (next) params.set("view", "community");
+          if (category) params.set("category", category);
+          navigate({ pathname: "/", search: params.toString() ? `?${params}` : "" });
+        }}
+        onSearchOpen={() => {
+          if (location.pathname !== "/") {
+            navigate("/");
+            setTimeout(() => setSearchOpen(true), 50);
+          } else {
+            setSearchOpen(true);
+          }
+        }}
       />
     </>
   );

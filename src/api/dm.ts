@@ -13,6 +13,9 @@ export type DmRoom = {
     email?: string;
   };
   last_message?: string | null;
+  last_message_content?: string | null;
+  last_message_type?: string | null;
+  last_message_at?: string | null;
   unread_count?: number;
 };
 
@@ -38,12 +41,11 @@ const getRooms = async (myId: string): Promise<DmRoom[]> => {
       user2:user!dm_room_user2_id_fkey(id, nickname, profile_image, email)
     `,
     )
-    .or(`user1_id.eq.${myId},user2_id.eq.${myId}`)
-    .order("created_at", { ascending: false });
+    .or(`user1_id.eq.${myId},user2_id.eq.${myId}`);
 
   if (error) throw error;
 
-  return ((data ?? []) as unknown[]).map((row) => {
+  const rooms = ((data ?? []) as unknown[]).map((row) => {
     const r = row as {
       id: string;
       user1_id: string;
@@ -59,8 +61,59 @@ const getRooms = async (myId: string): Promise<DmRoom[]> => {
       user2_id: r.user2_id,
       created_at: r.created_at,
       other_user: other,
+    } as DmRoom;
+  });
+
+  if (rooms.length === 0) return [];
+
+  const roomIds = rooms.map((r) => r.id);
+
+  // 마지막 메시지 조회 (내림차순, 룸별 첫 번째만 사용)
+  const { data: allMessages } = await supabase
+    .from("dm_message")
+    .select("room_id, content, file_type, created_at")
+    .in("room_id", roomIds)
+    .order("created_at", { ascending: false });
+
+  // 안읽은 메시지 수 조회
+  const { data: unreadMessages } = await supabase
+    .from("dm_message")
+    .select("room_id")
+    .in("room_id", roomIds)
+    .eq("is_read", false)
+    .neq("sender_id", myId);
+
+  // 룸별 마지막 메시지 맵
+  const lastMsgMap: Record<string, { content: string | null; file_type: string | null; created_at: string }> = {};
+  for (const msg of allMessages ?? []) {
+    const m = msg as { room_id: string; content: string | null; file_type: string | null; created_at: string };
+    if (!lastMsgMap[m.room_id]) {
+      lastMsgMap[m.room_id] = { content: m.content, file_type: m.file_type, created_at: m.created_at };
+    }
+  }
+
+  // 룸별 안읽은 수 맵
+  const unreadMap: Record<string, number> = {};
+  for (const msg of unreadMessages ?? []) {
+    const m = msg as { room_id: string };
+    unreadMap[m.room_id] = (unreadMap[m.room_id] ?? 0) + 1;
+  }
+
+  // 데이터 합치기 + 마지막 메시지 시간순 정렬
+  const enriched = rooms.map((room) => {
+    const last = lastMsgMap[room.id];
+    return {
+      ...room,
+      last_message_content: last?.content ?? null,
+      last_message_type: last?.file_type ?? null,
+      last_message_at: last?.created_at ?? room.created_at,
+      unread_count: unreadMap[room.id] ?? 0,
     };
   });
+
+  enriched.sort((a, b) => (b.last_message_at ?? "").localeCompare(a.last_message_at ?? ""));
+
+  return enriched;
 };
 
 // 특정 방의 메시지 목록 조회

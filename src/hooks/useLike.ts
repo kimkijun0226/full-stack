@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { likeApi } from "@/api";
+import { likeApi, userApi } from "@/api";
 import { notificationApi } from "@/api";
 import { likeKeys } from "@/constants/queryKeys";
 import { useAuthStore } from "@/stores";
@@ -28,11 +28,15 @@ export function useToggleTopicLike(topicId: number, topicAuthorId?: string, topi
           const titlePreview = topicTitle
             ? `"${topicTitle.length > 24 ? topicTitle.slice(0, 24) + "…" : topicTitle}"`
             : null;
+          const senderInfo = await userApi.getUserInfo(user.id);
+          const senderName = senderInfo?.nickname || user.email;
           await notificationApi.createNotification({
             receiver_id: topicAuthorId,
             sender_id: user.id,
             type: "topic_like",
-            content: titlePreview ? `${titlePreview} 글에 좋아요를 눌렀습니다.` : "회원님의 글을 좋아합니다.",
+            content: titlePreview
+              ? `${senderName}님이 ${titlePreview} 글에 좋아요를 눌렀습니다.`
+              : `${senderName}님이 회원님의 글을 좋아합니다.`,
             link: `/topics/${topicId}/detail`,
           });
         }

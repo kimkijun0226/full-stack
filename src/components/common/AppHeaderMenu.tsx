@@ -1,6 +1,6 @@
 import type { UserInfo } from "@/api";
 import { useTheme } from "@/components/theme-context";
-import { BookOpen, CircleUser, LogOut, Moon, MessageCircle, Sun, UserPen, X } from "lucide-react";
+import { CircleUser, LogOut, Moon, MessageSquareDot, Sun, UserPen, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AppHeaderMenuProps {
@@ -12,9 +12,13 @@ interface AppHeaderMenuProps {
     id: string;
   } | null;
   userInfo: UserInfo | null | undefined;
+  isCommunityView?: boolean;
+  onToggleCommunityView?: () => void;
+  onSearchOpen?: () => void;
+  dmUnreadCount?: number;
 }
 
-function AppHeaderMenu({ isOpen, onLogout, onOpenChange, user, userInfo }: AppHeaderMenuProps) {
+function AppHeaderMenu({ isOpen, onLogout, onOpenChange, user, userInfo, dmUnreadCount }: AppHeaderMenuProps) {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -77,23 +81,19 @@ function AppHeaderMenu({ isOpen, onLogout, onOpenChange, user, userInfo }: AppHe
               type="button"
               className="inline-flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground/80 transition hover:bg-foreground/5 hover:text-foreground"
               onClick={() => {
-                navigate("/");
-                onOpenChange(false);
-              }}
-            >
-              <BookOpen className="h-4 w-4 shrink-0" />
-              나의 글
-            </button>
-            <button
-              type="button"
-              className="inline-flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-foreground/80 transition hover:bg-foreground/5 hover:text-foreground"
-              onClick={() => {
                 navigate("/dm");
                 onOpenChange(false);
               }}
             >
-              <MessageCircle className="h-4 w-4 shrink-0" />
-              메시지
+              <div className="relative shrink-0">
+                <MessageSquareDot className="h-4 w-4" />
+                {!!dmUnreadCount && dmUnreadCount > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+                    {dmUnreadCount > 9 ? "9+" : dmUnreadCount}
+                  </span>
+                )}
+              </div>
+              Direct Message
             </button>
           </div>
 

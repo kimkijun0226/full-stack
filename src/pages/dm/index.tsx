@@ -52,6 +52,17 @@ function buildChatItems(messages: DmMessage[]): ChatItem[] {
   return result;
 }
 
+// 채팅방 리스트 시간 포맷 (KakaoTalk 스타일)
+function formatRoomTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return "";
+  const d = dayjs(dateStr);
+  const now = dayjs();
+  if (d.isSame(now, "day")) return d.format("HH:mm");
+  if (d.isSame(now.subtract(1, "day"), "day")) return "어제";
+  if (d.isSame(now, "year")) return d.format("M/D");
+  return d.format("YY/M/D");
+}
+
 export default function DmPage() {
   const { user } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -286,7 +297,7 @@ export default function DmPage() {
           ) : (
             /* 기본 헤더 */
             <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-foreground tracking-wide">Messages</p>
+              <p className="text-sm font-bold text-foreground tracking-wide">DM</p>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -411,17 +422,42 @@ export default function DmPage() {
                       )}
                     >
                       {other?.profile_image ? (
-                        <img src={other.profile_image} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                        <img src={other.profile_image} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
                       ) : (
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground/8 dark:bg-white/10 text-xs text-foreground/60 dark:text-white/60">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-foreground/8 dark:bg-white/10 text-xs text-foreground/60 dark:text-white/60">
                           {other?.nickname?.charAt(0) ?? "?"}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground/90 dark:text-white/90">
-                          {other?.nickname ?? "알 수 없음"}
-                        </p>
-                        <p className="truncate text-[11px] text-foreground/40 dark:text-white/40">{other?.email}</p>
+                        <div className="flex items-baseline justify-between gap-1">
+                          <div className="flex items-baseline gap-1.5 min-w-0 flex-1 overflow-hidden">
+                            <p className="shrink-0 text-sm font-semibold text-foreground/90 dark:text-white/90">
+                              {other?.nickname ?? "알 수 없음"}
+                            </p>
+                            {other?.email && (
+                              <p className="truncate text-[10px] text-foreground/40 dark:text-white/30">
+                                {other.email}
+                              </p>
+                            )}
+                          </div>
+                          <span className="shrink-0 text-[10px] text-foreground/40 dark:text-white/30 ml-1">
+                            {formatRoomTime(room.last_message_at)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-1 mt-0.5">
+                          <p className="truncate text-[11px] text-foreground/50 dark:text-white/40">
+                            {room.last_message_type === "image"
+                              ? "🖼️ 사진"
+                              : room.last_message_type === "file"
+                              ? "📎 파일"
+                              : (room.last_message_content ?? "")}
+                          </p>
+                          {!!room.unread_count && room.unread_count > 0 && (
+                            <span className="shrink-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                              {room.unread_count > 99 ? "99+" : room.unread_count}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </button>
                   );
@@ -706,7 +742,7 @@ export default function DmPage() {
                             className={cn(
                               "mb-1 flex items-center gap-2 rounded-xl px-3 py-2 text-xs underline",
                               isMine
-                                ? "bg-primary/90 text-primary-foreground"
+                                ? "bg-indigo-500/80 dark:bg-indigo-400/70 text-white"
                                 : "bg-foreground/8 dark:bg-white/10 text-foreground/80 dark:text-white/80",
                             )}
                           >
@@ -719,7 +755,7 @@ export default function DmPage() {
                             className={cn(
                               "rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
                               isMine
-                                ? "rounded-tr-sm bg-primary text-primary-foreground"
+                                ? "rounded-tr-sm bg-indigo-500/80 dark:bg-indigo-400/70 text-white"
                                 : "rounded-tl-sm bg-foreground/8 dark:bg-white/10 text-foreground/90 dark:text-white/90",
                             )}
                           >

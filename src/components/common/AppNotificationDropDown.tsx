@@ -60,10 +60,10 @@ export function AppNotificationDropdown() {
         className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/30 bg-white shadow-sm shadow-primary/10 text-primary/70 transition hover:border-primary/50 hover:bg-primary/10 hover:text-primary dark:border-border dark:bg-foreground/5 dark:shadow-none dark:text-foreground/60 dark:hover:bg-foreground/10 dark:hover:text-foreground"
         onClick={handleOpen}
       >
-        <Bell className="h-4 w-4" />
+        <Bell className={cn("h-4 w-4", unreadCount > 0 && "text-rose-500 dark:text-rose-400")} />
         {/* 읽지 않은 알림 뱃지 */}
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">
+          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

@@ -16,10 +16,11 @@ export function useDmRooms() {
     enabled: !!user?.id,
   });
 
-  // 새 방 생성되면 목록 갱신
+  // 새 방 생성 또는 새 메시지 수신 시 목록 갱신 (마지막 메시지·안읽음 수 실시간 반영)
   useEffect(() => {
     if (!user?.id) return;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let roomChannel: ReturnType<typeof supabase.channel> | null = null;
+    let msgChannel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
 
     (async () => {
@@ -28,9 +29,17 @@ export function useDmRooms() {
       } = await supabase.auth.getSession();
       if (cancelled || !session) return;
 
-      channel = supabase
+      roomChannel = supabase
         .channel(`dm_room:${user.id}`)
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "dm_room" }, () => {
+          queryClient.invalidateQueries({ queryKey: ["dm", "rooms"] });
+        })
+        .subscribe();
+
+      // dm_message 테이블에 새 메시지 오면 방 목록 전체 재조회
+      msgChannel = supabase
+        .channel(`dm_room_msg_watch:${user.id}`)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "dm_message" }, () => {
           queryClient.invalidateQueries({ queryKey: ["dm", "rooms"] });
         })
         .subscribe();
@@ -38,7 +47,8 @@ export function useDmRooms() {
 
     return () => {
       cancelled = true;
-      if (channel) supabase.removeChannel(channel);
+      if (roomChannel) supabase.removeChannel(roomChannel);
+      if (msgChannel) supabase.removeChannel(msgChannel);
     };
   }, [user?.id, queryClient]);
 
@@ -90,9 +100,13 @@ export function useDmMessages(roomId: string | null) {
               if (old.some((m) => m.id === (payload.new as DmMessage).id)) return old;
               return [...old, payload.new as DmMessage];
             });
+            // 방 목록 갱신 (마지막 메시지 업데이트)
+            queryClient.invalidateQueries({ queryKey: ["dm", "rooms"] });
             // 상대방 메시지면 읽음 처리
             if ((payload.new as DmMessage).sender_id !== user.id) {
-              dmApi.markRoomAsRead(roomId, user.id);
+              dmApi.markRoomAsRead(roomId, user.id).then(() => {
+                queryClient.invalidateQueries({ queryKey: ["dm", "rooms"] });
+              });
             }
           },
         )
@@ -108,9 +122,11 @@ export function useDmMessages(roomId: string | null) {
   // 방 진입 시 읽음 처리
   useEffect(() => {
     if (roomId && user?.id) {
-      dmApi.markRoomAsRead(roomId, user.id);
+      dmApi.markRoomAsRead(roomId, user.id).then(() => {
+        queryClient.invalidateQueries({ queryKey: ["dm", "rooms"] });
+      });
     }
-  }, [roomId, user?.id]);
+  }, [roomId, user?.id, queryClient]);
 
   return messages;
 }

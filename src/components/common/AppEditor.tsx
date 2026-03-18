@@ -8,6 +8,7 @@ import "@blocknote/mantine/style.css";
 import "@blocknote/core/fonts/inter.css";
 import type { Block } from "@blocknote/core";
 import { useEffect } from "react";
+import { useTheme } from "@/components/theme-context";
 
 interface AppEditorProps {
   content?: Block[];
@@ -17,6 +18,11 @@ interface AppEditorProps {
 
 export function AppEditor({ content, setContent, readonly }: AppEditorProps) {
   const locale = ko;
+  const { theme } = useTheme();
+  const resolvedTheme =
+    theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ? "dark"
+      : "light";
   // Create a new editor instance
   const editor = useCreateBlockNote({
     dictionary: {
@@ -45,6 +51,7 @@ export function AppEditor({ content, setContent, readonly }: AppEditorProps) {
       editor={editor}
       editable={!readonly}
       lang="ko"
+      theme={resolvedTheme}
       onChange={() => {
         if (!readonly) {
           setContent?.(editor.document);
