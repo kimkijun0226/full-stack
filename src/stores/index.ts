@@ -39,3 +39,18 @@ export const useSearchStore = create<SearchStore>()((set) => ({
   searchOpen: false,
   setSearchOpen: (v) => set({ searchOpen: v }),
 }));
+
+interface ViewStore {
+  isCommunityView: boolean;
+  setIsCommunityView: (v: boolean) => void;
+}
+
+export const useViewStore = create<ViewStore>()(
+  persist(
+    (set) => ({
+      isCommunityView: false,
+      setIsCommunityView: (v) => set({ isCommunityView: v }),
+    }),
+    { name: "view-storage" },
+  ),
+);
