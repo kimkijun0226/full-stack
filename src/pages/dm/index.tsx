@@ -236,16 +236,16 @@ export default function DmPage() {
   };
 
   return (
-    <div className="fixed left-0 right-0 top-[60px] bottom-0 flex overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="fixed left-0 right-0 top-[60px] bottom-0 flex overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-background dark:via-background dark:to-background">
       {/* ── 사이드바 ── */}
       <aside
         className={cn(
-          "flex shrink-0 flex-col border-r border-border bg-white/80 backdrop-blur-sm shadow-sm transition-all",
+          "flex shrink-0 flex-col border-r border-border bg-background/90 dark:bg-background/95 backdrop-blur-sm shadow-sm transition-all",
           activeRoomId ? "hidden md:flex md:w-72" : "flex w-full md:w-72",
         )}
       >
         {/* 헤더 */}
-        <div className="border-b border-border bg-gradient-to-r from-indigo-50/60 to-transparent px-4 py-3.5">
+        <div className="border-b border-border bg-gradient-to-r from-indigo-50/60 to-transparent dark:from-indigo-950/30 dark:to-transparent px-4 py-3.5">
           {addPanelOpen ? (
             /* 사람 추가 모드 헤더 */
             <div className="flex items-center gap-2">
