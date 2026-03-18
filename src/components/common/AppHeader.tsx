@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore, useSearchStore, useViewStore } from "@/stores";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, CircleUser, Globe2, LayoutGrid, MessageCircle, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleUser, Globe2, MessageCircle, Moon, Search, Sun } from "lucide-react";
 import { useUser } from "@/hooks";
 import { useDmUnreadCount } from "@/hooks";
 import { AppHeaderMenu } from "./AppHeaderMenu";
 import { AppNotificationDropdown } from "./AppNotificationDropDown";
 import { CLASS_CATEGORY } from "@/constants/category.constant";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-context";
 
 function AppHeader() {
   const navigate = useNavigate();
@@ -16,11 +17,11 @@ function AppHeader() {
   const { userInfo } = useUser();
   const { data: dmUnreadCount = 0 } = useDmUnreadCount();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { searchOpen, setSearchOpen } = useSearchStore();
@@ -55,26 +56,16 @@ function AppHeader() {
   const isOnDm = location.pathname === "/dm";
 
   useEffect(() => {
-    if (!categoryDropdownOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
-        setCategoryDropdownOpen(false);
-      }
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [categoryDropdownOpen]);
-
-  useEffect(() => {
-    if (categoryDropdownOpen) {
-      requestAnimationFrame(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        setCanScrollLeft(el.scrollLeft > 4);
-        setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-      });
-    }
-  }, [categoryDropdownOpen]);
+  }, []);
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -160,6 +151,16 @@ function AppHeader() {
           </button>
 
           <div className="flex items-center gap-2">
+            {/* 테마 토글 */}
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition border-primary/30 bg-white text-primary/70 shadow-primary/10 hover:border-primary/50 hover:bg-primary/10 hover:text-primary dark:border-border dark:bg-foreground/5 dark:text-foreground/60 dark:hover:bg-foreground/10 dark:hover:text-foreground dark:shadow-none"
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              title={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+
             {/* Globe2 - 나의 글/커뮤니티 토글 (로그인 사용자만) */}
             {user?.id && (
               <button
@@ -183,86 +184,6 @@ function AppHeader() {
                 <Globe2 className="h-4 w-4" />
               </button>
             )}
-
-            {/* LayoutGrid - 카테고리 드롭다운 (모바일 전용 lg:hidden) */}
-            <div ref={categoryDropdownRef} className="relative lg:hidden">
-              <button
-                type="button"
-                onClick={() => setCategoryDropdownOpen((v) => !v)}
-                className={cn(
-                  "inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition",
-                  categoryDropdownOpen
-                    ? "border-primary/50 bg-primary/15 text-primary shadow-primary/10"
-                    : "border-primary/30 bg-white text-primary/70 shadow-primary/10 hover:border-primary/50 hover:bg-primary/10 hover:text-primary dark:border-border dark:bg-foreground/5 dark:text-foreground/60 dark:hover:bg-foreground/10 dark:hover:text-foreground dark:shadow-none",
-                )}
-                title="카테고리"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-
-              {categoryDropdownOpen && (
-                <div className="fixed left-0 right-0 top-[60px] z-50 border-b border-primary/15 dark:border-border bg-card shadow-lg shadow-black/8 dark:shadow-black/20">
-                  <div className="relative flex items-center">
-                    {/* 왼쪽 스크롤 화살표 */}
-                    {canScrollLeft && (
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => handleScrollBy("left")}
-                        className="absolute left-3 z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-card shadow-sm text-primary hover:bg-primary/10 transition"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                    )}
-                    {/* 스크롤 컨테이너 */}
-                    <div
-                      ref={scrollRef}
-                      onScroll={checkScroll}
-                      className="flex items-center gap-2 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                      style={{
-                        paddingLeft: canScrollLeft ? "48px" : "16px",
-                        paddingRight: canScrollRight ? "48px" : "16px",
-                        transition: "padding 0.15s",
-                      }}
-                    >
-                      {CLASS_CATEGORY.map((menu) => {
-                        const isActive = category === menu.category;
-                        return (
-                          <button
-                            key={menu.id}
-                            type="button"
-                            onClick={() => {
-                              navigate({ pathname: "/", search: makeCategorySearch(menu.category) });
-                              setCategoryDropdownOpen(false);
-                            }}
-                            className={cn(
-                              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition",
-                              isActive
-                                ? "border-primary/40 bg-primary/10 text-primary"
-                                : "border-border bg-foreground/5 text-foreground/60 hover:border-primary/30 hover:bg-primary/8 hover:text-primary",
-                            )}
-                          >
-                            {menu.icon}
-                            <span>{menu.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {/* 오른쪽 스크롤 화살표 */}
-                    {canScrollRight && (
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => handleScrollBy("right")}
-                        className="absolute right-3 z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-card shadow-sm text-primary hover:bg-primary/10 transition"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* DM - 로그인 사용자만, /dm 활성화 표시 */}
             {user?.id && (
@@ -329,6 +250,67 @@ function AppHeader() {
               >
                 로그인
               </NavLink>
+            )}
+          </div>
+        </div>
+
+        {/* 모바일 카테고리 바 - 헤더 내부 하단 */}
+        <div className="lg:hidden">
+          <div className="relative flex items-center">
+            {canScrollLeft && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleScrollBy("left")}
+                className="absolute left-0 z-10 inline-flex h-full w-10 shrink-0 items-center justify-start pl-1 bg-gradient-to-r from-background via-background/80 to-transparent text-primary"
+              >
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary/30 bg-white dark:bg-background shadow-sm hover:bg-primary/10 transition">
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </span>
+              </button>
+            )}
+            <div
+              ref={scrollRef}
+              onScroll={checkScroll}
+              className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{
+                paddingLeft: canScrollLeft ? "32px" : "12px",
+                paddingRight: canScrollRight ? "32px" : "12px",
+                paddingTop: "6px",
+                paddingBottom: "8px",
+                transition: "padding 0.15s",
+              }}
+            >
+              {CLASS_CATEGORY.map((menu) => {
+                const isActive = category === menu.category;
+                return (
+                  <button
+                    key={menu.id}
+                    type="button"
+                    onClick={() => navigate({ pathname: "/", search: makeCategorySearch(menu.category) })}
+                    className={cn(
+                      "inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-[12px] font-medium transition",
+                      isActive
+                        ? "border-primary/80 bg-primary text-primary-foreground"
+                        : "border-border bg-white dark:bg-foreground/5 text-foreground/60 hover:border-primary/30 hover:bg-primary/8 hover:text-primary",
+                    )}
+                  >
+                    {menu.label}
+                  </button>
+                );
+              })}
+            </div>
+            {canScrollRight && (
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleScrollBy("right")}
+                className="absolute right-0 z-10 inline-flex h-full w-10 shrink-0 items-center justify-end pr-1 bg-gradient-to-l from-background via-background/80 to-transparent text-primary"
+              >
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-primary/30 bg-white dark:bg-background shadow-sm hover:bg-primary/10 transition">
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </span>
+              </button>
             )}
           </div>
         </div>

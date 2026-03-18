@@ -856,7 +856,7 @@ export default function DmPage() {
           </div>
         </div>
       ) : (
-        <div className="hidden md:flex flex-1 flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 to-indigo-50/40">
+        <div className="hidden md:flex flex-1 flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-background dark:to-background">
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-400/20 to-purple-400/20 shadow-inner">
             <MessageSquare className="h-10 w-10 text-indigo-400/60" />
           </div>

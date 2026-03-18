@@ -117,7 +117,7 @@ function App() {
 
   return (
     <main className="w-full flex-1 min-h-screen lg:flex ">
-      <div className="fixed right-1/2 bottom-10 translate-x-1/2 z-20 flex items-center gap-2 p-1.5 rounded-full border border-violet-200/60 bg-white/65 dark:border-sky-500/15 dark:bg-slate-950/40 shadow-2xl shadow-black/10 ring-1 ring-violet-300/15 dark:ring-sky-500/10 backdrop-blur-xl supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-slate-950/45">
+      <div className="fixed right-1/2 bottom-5 lg:bottom-10 translate-x-1/2 z-20 flex items-center gap-2 p-1.5 rounded-full border border-violet-200/60 bg-white/65 dark:border-sky-500/15 dark:bg-slate-950/40 shadow-2xl shadow-black/10 ring-1 ring-violet-300/15 dark:ring-sky-500/10 backdrop-blur-xl supports-backdrop-filter:bg-white/70 supports-backdrop-filter:dark:bg-slate-950/45">
         <Button
           variant="ghost"
           className={`relative overflow-hidden py-5 px-6 rounded-full border text-white shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-none transition-all duration-300 ease-out before:absolute before:inset-0 before:bg-linear-to-r before:from-white/0 before:via-white/25 before:to-white/0 before:translate-x-[-130%] hover:before:translate-x-[130%] before:transition-transform before:duration-700 before:ease-out ${
@@ -160,8 +160,8 @@ function App() {
       {/* 사이드바 자리 확보용 spacer */}
       {!searchOpen && <div className="hidden lg:block shrink-0 w-56" />}
       {/* 글 목록 */}
-      <section className="flex-1 min-w-0 overflow-hidden flex flex-col gap-12 px-2 pt-4 pb-6">
-        <div className="w-full flex flex-col gap-6">
+      <section className="flex-1 min-w-0 overflow-hidden flex flex-col gap-12 px-2 pt-2 pb-6">
+        <div className="w-full flex flex-col gap-2">
           {/* 검색 패널 */}
           {searchOpen && (
             <div ref={searchPanelRef} className="rounded-2xl border border-border bg-card p-3">
